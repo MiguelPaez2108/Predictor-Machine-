@@ -1,0 +1,54 @@
+Aquí está la tabla limpia y estandarizada (valor en **millones de euros**):
+
+| Selección                       | Confederación | Valor de mercado (M€) |
+| ------------------------------- | ------------- | --------------------: |
+| Francia                         | UEFA          |               1520.00 |
+| Inglaterra                      | UEFA          |               1360.00 |
+| España                          | UEFA          |               1220.00 |
+| Portugal                        | UEFA          |               1010.00 |
+| Alemania                        | UEFA          |                947.00 |
+| Brasil                          | CONMEBOL      |                928.20 |
+| Argentina                       | CONMEBOL      |                807.50 |
+| Países Bajos                    | UEFA          |                754.20 |
+| Noruega                         | UEFA          |                589.90 |
+| Bélgica                         | UEFA          |                547.50 |
+| Costa de Marfil                 | CAF           |                522.10 |
+| Senegal                         | CAF           |                478.10 |
+| Turquía                         | UEFA          |                473.70 |
+| Marruecos                       | CAF           |                447.70 |
+| Suecia                          | UEFA          |                406.08 |
+| Croacia                         | UEFA          |                387.30 |
+| Estados Unidos                  | CONCACAF      |                385.65 |
+| Ecuador                         | CONMEBOL      |                368.70 |
+| Uruguay                         | CONMEBOL      |                359.30 |
+| Suiza                           | UEFA          |                332.50 |
+| Colombia                        | CONMEBOL      |                302.35 |
+| Japón                           | AFC           |                270.85 |
+| Argelia                         | CAF           |                256.90 |
+| Austria                         | UEFA          |                245.20 |
+| Ghana                           | CAF           |                234.60 |
+| Canadá                          | CONCACAF      |                198.65 |
+| México                          | CONCACAF      |                191.85 |
+| República Checa                 | UEFA          |                188.18 |
+| Escocia                         | UEFA          |                170.25 |
+| Paraguay                        | CONMEBOL      |                153.65 |
+| Bosnia-Herzegovina              | UEFA          |                146.40 |
+| República Democrática del Congo | CAF           |                143.90 |
+| Corea del Sur                   | AFC           |                139.05 |
+| Egipto                          | CAF           |                116.48 |
+| Uzbekistán                      | AFC           |                 85.33 |
+| Australia                       | AFC           |                 77.45 |
+| Túnez                           | CAF           |                 69.95 |
+| Haití                           | CONCACAF      |                 55.90 |
+| Cabo Verde                      | CAF           |                 54.50 |
+| Sudáfrica                       | CAF           |                 49.25 |
+| Arabia Saudita                  | AFC           |                 40.68 |
+| Panamá                          | CONCACAF      |                 34.55 |
+| Nueva Zelanda                   | OFC           |                 34.35 |
+| Irán                            | AFC           |                 32.05 |
+| Curazao                         | CONCACAF      |                 25.78 |
+| Irak                            | AFC           |                 21.20 |
+| Jordania                        | AFC           |                 20.30 |
+| Qatar                           | AFC           |                 19.93 |
+
+

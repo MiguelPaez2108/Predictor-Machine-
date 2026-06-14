@@ -1,0 +1,57 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─── Entornos virtuales ────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Datos crudos / pesados (no subir a git) ─────────────────────────────────
+data/raw/
+data/features/
+data/model/*.pkl
+data/model/*.parquet
+data/model/*.json
+
+# Excepciones: sí subir la estructura vacía
+!data/raw/.gitkeep
+!data/features/.gitkeep
+!data/model/.gitkeep
+
+# ─── StatsBomb (puede ser >1 GB) ─────────────────────────────────────────────
+data/raw/statsbomb/
+
+# ─── MLflow ───────────────────────────────────────────────────────────────────
+mlflow/mlruns/
+mlflow/mlartifacts/
+
+# ─── Scratch / temporales ─────────────────────────────────────────────────────
+scratch/
+*.log
+
+# ─── IDEs ─────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Secretos ─────────────────────────────────────────────────────────────────
+.env
+*.env
