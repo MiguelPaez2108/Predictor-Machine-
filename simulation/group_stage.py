@@ -79,6 +79,20 @@ def _rank_group(stats: Dict[str, TeamGroupStats],
     return teams_list
 
 
+def load_real_results() -> List[Dict]:
+    """Carga los resultados reales de los partidos registrados."""
+    import json
+    root = Path(__file__).parent.parent
+    path = root / "data" / "resultados_reales.json"
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Simular un grupo completo
 # ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +102,7 @@ def simulate_group(group_name: str, teams: List[str],
                    rng: Optional[np.random.Generator] = None) -> GroupResult:
     """
     Simula los 6 partidos del grupo y devuelve la tabla de posiciones.
+    Usa resultados reales si están registrados.
     """
     if models is None:
         models = get_models()
@@ -101,10 +116,39 @@ def simulate_group(group_name: str, teams: List[str],
 
     matches: List[Dict] = []
     h2h: Dict[Tuple[str, str], Dict] = {}
+    real_results = load_real_results()
 
     import itertools
     for home, away in itertools.combinations(teams, 2):
-        result = simulate_group_match(home, away, models, rng)
+        # Buscar si el partido tiene un resultado real registrado
+        real = None
+        for r in real_results:
+            if (r["home_team"] == home and r["away_team"] == away) or \
+               (r["home_team"] == away and r["away_team"] == home):
+                real = r
+                break
+
+        if real:
+            # Usar resultado real con la correspondencia correcta de local/visitante
+            if real["home_team"] == home:
+                hg = real["home_goals"]
+                ag = real["away_goals"]
+            else:
+                hg = real["away_goals"]
+                ag = real["home_goals"]
+            res_char = "H" if hg > ag else ("A" if hg < ag else "D")
+            result = {
+                "home_team": home,
+                "away_team": away,
+                "home_goals": hg,
+                "away_goals": ag,
+                "result": res_char,
+                "real": True
+            }
+        else:
+            result = simulate_group_match(home, away, models, rng)
+            result["real"] = False
+
         matches.append({**result, "group": group_name})
 
         hg, ag = result["home_goals"], result["away_goals"]

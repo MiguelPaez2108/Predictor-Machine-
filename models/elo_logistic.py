@@ -218,6 +218,23 @@ class EloLogisticModel:
         self.classes_   = ["H", "D", "A"]
         self.available_features_: List[str] = []
 
+    def get_elo(self, team: str) -> float:
+        """Devuelve el Elo actual de un equipo para resolver empates en penaltis."""
+        if not hasattr(self, "_elo_cache_dict") or self._elo_cache_dict is None:
+            try:
+                import pandas as pd
+                from config import DATA_FEATURES
+                p = DATA_FEATURES / "elo_current.parquet"
+                if p.exists():
+                    df = pd.read_parquet(p)
+                    self._elo_cache_dict = dict(zip(df["team"], df["elo_current"]))
+                else:
+                    self._elo_cache_dict = {}
+            except Exception:
+                self._elo_cache_dict = {}
+        return float(self._elo_cache_dict.get(team, 1500.0))
+
+
     def _prepare_X(self, df: pd.DataFrame) -> pd.DataFrame:
         """Selecciona features disponibles y rellena NaN con medianas."""
         avail = [f for f in self.features if f in df.columns]

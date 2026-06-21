@@ -220,20 +220,24 @@ def _run_one_simulation(models: Dict,
 
     for m in (ko.r32_matches or []):
         for t in [m.team1, m.team2]:
-            if t not in ko_data:
-                ko_data[t] = "R32"
+            ko_data[t] = "R32"
 
     for m in (ko.r16_matches or []):
-        ko_data[m.winner] = "R16"
+        for t in [m.team1, m.team2]:
+            ko_data[t] = "R16"
 
     for m in (ko.qf_matches or []):
-        ko_data[m.winner] = "QF"
+        for t in [m.team1, m.team2]:
+            ko_data[t] = "QF"
 
     for m in (ko.sf_matches or []):
-        ko_data[m.winner] = "SF"
+        for t in [m.team1, m.team2]:
+            ko_data[t] = "SF"
 
-    if ko.runner_up:
-        ko_data[ko.runner_up] = "F"
+    if ko.final_match:
+        for t in [ko.final_match.team1, ko.final_match.team2]:
+            ko_data[t] = "F"
+
     if ko.champion:
         ko_data[ko.champion] = "Champion"
 
@@ -308,13 +312,10 @@ def simulate_wc2026(n_sims: int = 10_000,
             tr.total_group_ga   += gd.get("ga", 0)
             tr.total_group_pts  += gd.get("pts", 0)
 
-            pos = gd.get("position", 4)
-            if pos <= 2:
-                tr.n_group_advance += 1
-            # Los 3ros clasificados también pueden avanzar (best thirds)
-            # → lo gestionamos a través de ko_data
+            # Clasificación de grupos (tanto pos <= 2 como mejores terceros)
+            # se gestiona de forma única en el bucle de ko_data más abajo para evitar duplicados.
 
-        # Los mejores terceros que avanzaron también cuentan como "group_advance"
+        # Los equipos que avanzaron a la fase eliminatoria cuentan como "group_advance"
         for team, round_str in ko_data.items():
             if team not in team_results:
                 team_results[team] = TeamSimResults(
@@ -326,8 +327,7 @@ def simulate_wc2026(n_sims: int = 10_000,
                 tr.n_sims = 1
 
             if round_str in ("R32", "R16", "QF", "SF", "F", "Champion"):
-                tr.n_group_advance = max(tr.n_group_advance,
-                                         tr.n_group_advance + (1 if round_str != "R32" or True else 0))
+                tr.n_group_advance += 1
             if round_str in ("R16", "QF", "SF", "F", "Champion"):
                 tr.n_r16_advance += 1
             if round_str in ("QF", "SF", "F", "Champion"):

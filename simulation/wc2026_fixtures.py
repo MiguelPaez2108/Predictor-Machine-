@@ -22,7 +22,7 @@ WC2026_GROUPS = {
     "B": ["Canada",                  "Bosnia and Herzegovina", "Qatar", "Switzerland"],
     "C": ["Brazil",                  "Morocco",       "Haiti",         "Scotland"],
     "D": ["United States",           "Paraguay",      "Australia",     "Turkey"],
-    "E": ["Germany",                 "Curacao",       "Ivory Coast",   "Ecuador"],
+    "E": ["Germany",                 "Curaçao",       "Ivory Coast",   "Ecuador"],
     "F": ["Netherlands",             "Japan",         "Sweden",        "Tunisia"],
     "G": ["Belgium",                 "Egypt",         "Iran",          "New Zealand"],
     "H": ["Spain",                   "Cape Verde",    "Saudi Arabia",  "Uruguay"],

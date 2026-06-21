@@ -251,6 +251,277 @@ def add_target(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def build_wc2026_prediction_input(fixtures_df: pd.DataFrame, prediction_as_of_start: pd.Timestamp) -> pd.DataFrame:
+    """
+    Construye data/model/wc2026_prediction_input.parquet para usar con:
+      python models/ensemble.py --wc2026
+
+    Suposición operativa:
+    - Solo partidos de fase de grupos (48 equipos / 12 grupos).
+    - Fecha de predicción = prediction_as_of_start + offset por orden del fixture.
+    - Para features 'as-of' se usan los valores más recientes con date < as_of_date
+      (sin leakage hacia adelante).
+    """
+    # --- Fecha por partido (as-of) ---
+    fixtures = fixtures_df.copy().reset_index(drop=True)
+    fixtures["date"] = prediction_as_of_start + pd.to_timedelta(fixtures.index, unit="D")
+
+    # --- ELO (proxy futuro usando snapshot actual por equipo) ---
+    # Para predicción, 'neutral' en fixtures => home_advantage = 0.
+    elo_current = pd.read_parquet(DATA_RAW / "elo_historical.parquet").copy()
+    # Si no existe aquí, usamos elo_current.parquet si está.
+    from config import DATA_FEATURES
+    elo_curr_path = DATA_FEATURES / "elo_current.parquet"
+    if elo_curr_path.exists():
+        elo_current = pd.read_parquet(elo_curr_path)
+    else:
+        # fallback: intentar tomar último elo_home_post/elo_away_post desde elo_historical
+        elo = pd.read_parquet(DATA_RAW / "elo_historical.parquet").copy()
+        elo["date"] = pd.to_datetime(elo["date"])
+        elo = elo.sort_values("date").reset_index(drop=True)
+        elo_home = elo[["date", "home_team", "elo_home_post"]].rename(
+            columns={"home_team": "team", "elo_home_post": "elo_current"}
+        )
+        elo_away = elo[["date", "away_team", "elo_away_post"]].rename(
+            columns={"away_team": "team", "elo_away_post": "elo_current"}
+        )
+        elo_long = pd.concat([elo_home, elo_away], ignore_index=True)
+        elo_current = elo_long.groupby("team")["elo_current"].last().reset_index()
+
+    elo_map = elo_current.set_index("team")["elo_current"].to_dict()
+
+    fixtures["elo_home_pre"] = fixtures["home_team"].map(elo_map)
+    fixtures["elo_away_pre"] = fixtures["away_team"].map(elo_map)
+
+    # Expected home con neutral=true (home_advantage=0)
+    # expected_home = 1/(1+10^((elo_away - elo_home)/400))
+    dd = fixtures["elo_away_pre"] - fixtures["elo_home_pre"]
+    fixtures["expected_home_elo"] = 1.0 / (1.0 + np.power(10.0, dd / 400.0))
+    fixtures["expected_home"] = fixtures["expected_home_elo"]  # compat
+
+    # --- FIFA ranking (último snapshot por team) ---
+    fifa = pd.read_parquet(DATA_RAW / "fifa_rankings.parquet").copy()
+    fifa["date"] = pd.to_datetime(fifa["date"])
+    fifa_snap = (
+        fifa.sort_values("date")
+            .groupby("team")[["fifa_rank", "fifa_points"]]
+            .last()
+            .reset_index()
+    )
+    fixtures = fixtures.merge(
+        fifa_snap.rename(columns={"team": "home_team", "fifa_rank": "home_fifa_rank", "fifa_points": "home_fifa_pts"}),
+        on="home_team", how="left"
+    )
+    fixtures = fixtures.merge(
+        fifa_snap.rename(columns={"team": "away_team", "fifa_rank": "away_fifa_rank", "fifa_points": "away_fifa_pts"}),
+        on="away_team", how="left"
+    )
+
+    # --- Squad values (snapshot por team) ---
+    sv = pd.read_parquet(DATA_RAW / "squad_values.parquet").copy()
+    if "date" in sv.columns:
+        sv["date"] = pd.to_datetime(sv["date"])
+        sv = (
+            sv.sort_values("date")
+              .groupby("team")[["squad_value_log"]].last()
+              .reset_index()
+        )
+    fixtures = fixtures.merge(
+        sv[["team", "squad_value_log"]].rename(columns={"team": "home_team", "squad_value_log": "home_sv_log"}),
+        on="home_team", how="left"
+    )
+    fixtures = fixtures.merge(
+        sv[["team", "squad_value_log"]].rename(columns={"team": "away_team", "squad_value_log": "away_sv_log"}),
+        on="away_team", how="left"
+    )
+
+    # --- Form rolling / H2H (as-of determinista sin merge_asof) ---
+    # Para WC solo hay 72 partidos, así que iterar es aceptable y evita
+    # problemas de ordenación de merge_asof en pandas.
+    form_path = DATA_FEATURES / "form_rolling.parquet"
+    form = pd.read_parquet(form_path).copy()
+    form["date"] = pd.to_datetime(form["date"])
+
+    form_cols = [
+        "form_weighted", "form_pts_last6", "form_pts_last10", "form_gf_avg", "form_ga_avg",
+        "form_gd_avg", "form_wins", "form_draws", "form_losses", "momentum_trend"
+    ]
+
+    h2h = pd.read_parquet(DATA_FEATURES / "h2h_history.parquet").copy()
+    h2h["date"] = pd.to_datetime(h2h["date"])
+    h2h_cols = ["h2h_matches", "h2h_win_rate", "h2h_gf_avg", "h2h_ga_avg",
+                "h2h_gd_avg", "h2h_pts_avg"]
+
+    fixtures_sorted = fixtures.sort_values("date").reset_index(drop=True)
+
+    # Asegurar strings consistentes
+    fixtures_sorted["home_team"] = fixtures_sorted["home_team"].astype(str)
+    fixtures_sorted["away_team"] = fixtures_sorted["away_team"].astype(str)
+    form["team"] = form["team"].astype(str)
+    form["opponent"] = form["opponent"].astype(str)
+    h2h["team"] = h2h["team"].astype(str)
+    h2h["opponent"] = h2h["opponent"].astype(str)
+
+    # Pre-crear columnas
+    for c in form_cols:
+        fixtures_sorted[f"home_{c}"] = 0.0
+        fixtures_sorted[f"away_{c}"] = 0.0
+    for c in h2h_cols:
+        fixtures_sorted[f"home_{c}"] = 0.0
+        fixtures_sorted[f"away_{c}"] = 0.0
+
+    # Indexaciones para acelerar (por team, opponent)
+    form_g = form.groupby(["team", "opponent"])
+    h2h_g  = h2h.groupby(["team", "opponent"])
+
+    for idx, r in fixtures_sorted.iterrows():
+        as_of = r["date"]
+        ht = r["home_team"]
+        at = r["away_team"]
+
+        # Form home (ht vs at)
+        key = (ht, at)
+        if key in form_g.indices:
+            sub = form_g.get_group(key)
+            sub = sub[sub["date"] < as_of].sort_values("date")
+            if not sub.empty:
+                last = sub.iloc[-1]
+                for c in form_cols:
+                    fixtures_sorted.at[idx, f"home_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+        # Form away (at vs ht)
+        key = (at, ht)
+        if key in form_g.indices:
+            sub = form_g.get_group(key)
+            sub = sub[sub["date"] < as_of].sort_values("date")
+            if not sub.empty:
+                last = sub.iloc[-1]
+                for c in form_cols:
+                    fixtures_sorted.at[idx, f"away_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+        # H2H home
+        key = (ht, at)
+        if key in h2h_g.indices:
+            sub = h2h_g.get_group(key)
+            sub = sub[sub["date"] < as_of].sort_values("date")
+            if not sub.empty:
+                last = sub.iloc[-1]
+                for c in h2h_cols:
+                    fixtures_sorted.at[idx, f"home_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+        # H2H away
+        key = (at, ht)
+        if key in h2h_g.indices:
+            sub = h2h_g.get_group(key)
+            sub = sub[sub["date"] < as_of].sort_values("date")
+            if not sub.empty:
+                last = sub.iloc[-1]
+                for c in h2h_cols:
+                    fixtures_sorted.at[idx, f"away_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+    # --- xG + Context (as-of determinista sin merge_asof) ---
+    # Para WC (72 partidos) la iteración es aceptable y evita fallos de ordenación.
+
+    # xG rolling avg5 por equipo
+    xg = pd.read_parquet(DATA_FEATURES / "xg_derived.parquet").copy()
+    xg["date"] = pd.to_datetime(xg["date"])
+    if "team" not in xg.columns:
+        raise ValueError("xg_derived.parquet no contiene columna 'team'")
+
+    xg = xg.sort_values(["team", "date"])
+
+    # Preindex: por team, guardar arrays para búsquedas
+    xg_groups = {k: g for k, g in xg.groupby("team")}
+
+    # Context por (team, opponent)
+    ctx = pd.read_parquet(DATA_FEATURES / "context_features.parquet").copy()
+    ctx["date"] = pd.to_datetime(ctx["date"])
+    ctx_cols = ["days_rest", "fatigue_index", "matches_last_30d", "matches_in_tournament",
+                "is_knockout_phase", "tournament_weight"]
+    ctx = ctx.sort_values(["team", "opponent", "date"])
+    ctx_groups = {k: g for k, g in ctx.groupby(["team", "opponent"])}
+
+    for idx, r in fixtures_sorted.iterrows():
+        as_of = r["date"]
+        ht = r["home_team"]
+        at = r["away_team"]
+
+        # ---- xG home (team=ht) ----
+        g = xg_groups.get(ht)
+        if g is not None and not g.empty:
+            past = g[g["date"] < as_of].tail(5)
+            fixtures_sorted.at[idx, "home_xg_avg5"] = float(past["xg"].mean()) if len(past) > 0 else 0.0
+            fixtures_sorted.at[idx, "home_xga_avg5"] = float(past["xga"].mean()) if len(past) > 0 else 0.0
+            fixtures_sorted.at[idx, "home_xg_conv_avg5"] = float(past["xg_conversion"].mean()) if len(past) > 0 else 0.0
+
+        # ---- xG away (team=at) ----
+        g = xg_groups.get(at)
+        if g is not None and not g.empty:
+            past = g[g["date"] < as_of].tail(5)
+            fixtures_sorted.at[idx, "away_xg_avg5"] = float(past["xg"].mean()) if len(past) > 0 else 0.0
+            fixtures_sorted.at[idx, "away_xga_avg5"] = float(past["xga"].mean()) if len(past) > 0 else 0.0
+            fixtures_sorted.at[idx, "away_xg_conv_avg5"] = float(past["xg_conversion"].mean()) if len(past) > 0 else 0.0
+
+        # ---- Context home (team=ht, opponent=at) ----
+        cg = ctx_groups.get((ht, at))
+        if cg is not None and not cg.empty:
+            past = cg[cg["date"] < as_of].sort_values("date")
+            if not past.empty:
+                last = past.iloc[-1]
+                for c in ctx_cols:
+                    fixtures_sorted.at[idx, f"home_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+        # ---- Context away (team=at, opponent=ht) ----
+        cg = ctx_groups.get((at, ht))
+        if cg is not None and not cg.empty:
+            past = cg[cg["date"] < as_of].sort_values("date")
+            if not past.empty:
+                last = past.iloc[-1]
+                for c in ctx_cols:
+                    fixtures_sorted.at[idx, f"away_{c}"] = float(last[c]) if pd.notna(last[c]) else 0.0
+
+    # --- delta features (match training schema) ---
+    df = fixtures_sorted
+
+    df["delta_elo"] = df["elo_home_pre"] - df["elo_away_pre"]
+    df["delta_form"] = df["home_form_weighted"] - df["away_form_weighted"]
+
+    df["delta_xg"]  = df["home_xg_avg5"] - df["away_xg_avg5"]
+    df["delta_xga"] = df["home_xga_avg5"] - df["away_xga_avg5"]
+
+    df["delta_fifa_rank"] = df["away_fifa_rank"] - df["home_fifa_rank"]
+    df["delta_sv_log"] = df["home_sv_log"] - df["away_sv_log"]
+
+    df["delta_rest"] = df["home_days_rest"] - df["away_days_rest"]
+
+    # fill NaNs conservatively (RF/XGB tend to need numeric)
+    for c in ["delta_elo", "expected_home_elo", "delta_form", "delta_xg", "delta_xga",
+              "delta_fifa_rank", "delta_sv_log", "delta_rest"]:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
+
+    # columnas adicionales útiles
+    df["home_team"] = df["home_team"].astype(str)
+    df["away_team"] = df["away_team"].astype(str)
+
+    # salida mínima compatible con predict_match(meta_input loop)
+    out_cols = [
+        "date",
+        "home_team", "away_team",
+        "expected_home_elo",
+        "delta_elo", "delta_form",
+        "delta_xg", "delta_xga",
+        "delta_fifa_rank", "delta_sv_log",
+        "delta_rest",
+    ]
+    # si existen, mantener también h2h del partido (a veces útil)
+    for c in ["h2h_matches", "h2h_win_rate", "h2h_gf_avg", "h2h_ga_avg", "h2h_gd_avg", "h2h_pts_avg"]:
+        if f"home_{c}" in df.columns and f"away_{c}" in df.columns:
+            out_cols.extend([f"home_{c}", f"away_{c}"])
+
+    return df[out_cols].copy()
+
+
 def build_master_features():
     ensure_dirs()
 
@@ -304,6 +575,28 @@ def build_master_features():
     train.to_parquet(DATA_MODEL / "training_set.parquet", index=False)
     val.to_parquet(DATA_MODEL / "validation_set.parquet", index=False)
     test.to_parquet(DATA_MODEL / "test_set.parquet", index=False)
+
+    # ── Generar wc2026_prediction_input.parquet (solo grupos) ─────────────
+    wc_out = DATA_MODEL / "wc2026_prediction_input.parquet"
+    import traceback
+    try:
+        from simulation.wc2026_fixtures import generate_group_fixtures
+        fixtures = generate_group_fixtures()
+        fixtures_df = pd.DataFrame(fixtures)
+
+        # generate_group_fixtures incluye home/away + group; no necesitamos neutral/venue para el modelo
+        if "neutral" in fixtures_df.columns:
+            fixtures_df = fixtures_df.drop(columns=["neutral"], errors="ignore")
+
+        as_of_start = pd.Timestamp("2026-06-11")
+        wc_pred_input = build_wc2026_prediction_input(fixtures_df, as_of_start)
+        print(f"\nDEBUG: wc_pred_input generado con {len(wc_pred_input):,} filas")
+        wc_pred_input.to_parquet(wc_out, index=False)
+
+        print(f"\n✓ wc2026_prediction_input.parquet: {len(wc_pred_input):,} filas en {wc_out}")
+    except Exception:
+        print("\nWARN: no se pudo generar wc2026_prediction_input.parquet (ver traceback):")
+        traceback.print_exc()
 
     # Reporte de cobertura de features
     key_feats = ["delta_elo", "delta_form", "delta_fifa_rank",

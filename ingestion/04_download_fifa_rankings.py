@@ -126,17 +126,99 @@ def build_historical_from_kaggle():
 def create_manual_snapshot():
     """
     Snapshot manual de rankings FIFA actuales (junio 2026).
-    Basado en datos públicos para los 48 clasificados al WC2026.
+    Lee desde ranking.txt si existe y está en el escritorio/workspace.
     """
+    import re
+    from pathlib import Path
+    
+    # Intentar leer del ranking.txt
+    txt_path = Path(r"c:\Users\Asus\OneDrive\Escritorio\wc_predictor\ranking.txt")
+    if txt_path.exists():
+        print(f"  Cargando rankings FIFA actuales desde {txt_path}...")
+        content = txt_path.read_text(encoding="utf-8")
+        
+        translation_map = {
+            "España": "Spain",
+            "Países Bajos": "Netherlands",
+            "Alemania": "Germany",
+            "Bélgica": "Belgium",
+            "México": "Mexico",
+            "Estados Unidos": "United States",
+            "Japón": "Japan",
+            "Turquía": "Turkey",
+            "Canadá": "Canada",
+            "Costa de Marfil": "Ivory Coast",
+            "Argelia": "Algeria",
+            "Suecia": "Sweden",
+            "Escocia": "Scotland",
+            "Panamá": "Panama",
+            "RD Congo": "DR Congo",
+            "Chequia": "Czech Republic",
+            "Túnez": "Tunisia",
+            "Uzbekistán": "Uzbekistan",
+            "Catar": "Qatar",
+            "Arabia Saudí": "Saudi Arabia",
+            "Arabia Saudita": "Saudi Arabia",
+            "Sudáfrica": "South Africa",
+            "Cabo Verde": "Cape Verde",
+            "Bosnia y Herzegovina": "Bosnia and Herzegovina",
+            "Jordania": "Jordan",
+            "Nueva Zelanda": "New Zealand",
+            "Curazao": "Curaçao",
+            "Haití": "Haiti",
+            "Francia": "France",
+            "Inglaterra": "England",
+            "Brasil": "Brazil",
+            "Marruecos": "Morocco",
+            "Croacia": "Croatia",
+            "Suiza": "Switzerland",
+            "Irán": "Iran",
+            "Corea del Sur": "South Korea",
+            "Egipto": "Egypt",
+            "Austria": "Austria",
+            "Colombia": "Colombia",
+            "Uruguay": "Uruguay",
+            "Australia": "Australia",
+            "Ecuador": "Ecuador",
+            "Senegal": "Senegal",
+            "Irak": "Iraq",
+            "Noruega": "Norway"
+        }
+        
+        pattern = re.compile(r"\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([\d.]+)\s*\|")
+        rows = []
+        for line in content.split("\n"):
+            match = pattern.search(line)
+            if match:
+                rank_str = match.group(1).strip()
+                team_sp = match.group(2).strip()
+                pts_str = match.group(3).strip()
+                if team_sp == "Selección" or "---" in team_sp:
+                    continue
+                # Translate name
+                team_en = translation_map.get(team_sp, team_sp)
+                rows.append({
+                    "team": team_en,
+                    "fifa_rank": int(rank_str),
+                    "fifa_points": float(pts_str),
+                    "date": "2026-06-11",
+                    "source": "ranking_txt_file"
+                })
+        if rows:
+            print(f"  Rankings cargados y mapeados exitosamente: {len(rows)}")
+            return pd.DataFrame(rows)
+            
+    # Fallback si no existe o falla parsing
+    print("  Usando fallback manual estático...")
     rankings = [
         ("Argentina", 1, 1893.42),
         ("France", 2, 1851.41),
-        ("England", 3, 1820.83),
-        ("Belgium", 4, 1793.70),
+        ("Spain", 3, 1829.00),
+        ("England", 4, 1807.00),
         ("Brazil", 5, 1780.15),
         ("Portugal", 6, 1764.57),
         ("Netherlands", 7, 1752.17),
-        ("Spain", 8, 1742.99),
+        ("Belgium", 8, 1793.70),
         ("Germany", 9, 1731.68),
         ("Uruguay", 10, 1704.81),
         ("Colombia", 11, 1698.54),
@@ -147,36 +229,36 @@ def create_manual_snapshot():
         ("Senegal", 16, 1649.77),
         ("Croatia", 17, 1644.33),
         ("Switzerland", 18, 1638.55),
-        ("Denmark", 19, 1630.21),
         ("Ecuador", 20, 1618.76),
         ("Canada", 21, 1608.44),
-        ("Serbia", 22, 1601.87),
         ("Australia", 23, 1594.22),
         ("South Korea", 24, 1588.99),
         ("Iran", 25, 1577.64),
-        ("Poland", 26, 1571.08),
         ("Turkey", 27, 1564.33),
-        ("Venezuela", 28, 1558.72),
         ("Saudi Arabia", 29, 1551.44),
         ("Egypt", 30, 1544.87),
-        ("Nigeria", 31, 1538.21),
         ("Algeria", 32, 1531.64),
-        ("Costa Rica", 33, 1524.08),
-        ("Jamaica", 34, 1517.51),
-        ("Slovakia", 35, 1510.95),
-        ("Czech Republic", 36, 1504.38),
-        ("Ukraine", 37, 1497.81),
-        ("Romania", 38, 1491.25),
-        ("New Zealand", 39, 1484.68),
-        ("Honduras", 40, 1478.11),
-        ("Panama", 41, 1471.55),
-        ("Indonesia", 42, 1464.98),
-        ("Albania", 43, 1458.41),
-        ("Austria", 44, 1451.85),
-        ("Slovenia", 45, 1445.28),
-        ("Scotland", 46, 1438.71),
         ("Iraq", 47, 1432.15),
-        ("Congo DR", 48, 1425.58),
+        ("DR Congo", 48, 1425.58),
+        ("New Zealand", 39, 1484.68),
+        ("Scotland", 46, 1438.71),
+        ("Panama", 41, 1471.55),
+        ("Czech Republic", 36, 1504.38),
+        ("Norway", 31, 1530.00),
+        ("Ivory Coast", 33, 1540.00),
+        ("Sweden", 38, 1509.00),
+        ("Paraguay", 41, 1505.00),
+        ("Tunisia", 45, 1476.00),
+        ("Uzbekistan", 50, 1458.00),
+        ("Qatar", 56, 1450.00),
+        ("South Africa", 60, 1428.00),
+        ("Jordan", 63, 1387.00),
+        ("Bosnia and Herzegovina", 64, 1387.00),
+        ("Cape Verde", 67, 1371.00),
+        ("Ghana", 73, 1346.00),
+        ("Curacao", 82, 1294.00),
+        ("Haiti", 83, 1293.00),
+        ("Austria", 44, 1451.85)
     ]
 
     df = pd.DataFrame(rankings, columns=["team", "fifa_rank", "fifa_points"])
