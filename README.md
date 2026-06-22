@@ -1,10 +1,10 @@
-# ⚽ WC 2026 Predictor — Sistema de Predicción del Mundial
+#  WC 2026 Predictor — Sistema de Predicción del Mundial
 
 Sistema de predicción cuantitativa de alto rendimiento para la **Copa del Mundo FIFA 2026**, construido sobre un ensemble de 3 capas de modelos matemáticos y simulación Monte Carlo con 100 000 iteraciones.
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```
 Datos Crudos (martj42, Elo, FIFA, StatsBomb)
@@ -47,7 +47,7 @@ Calibra las probabilidades finales para que sean bien calibradas empíricamente 
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 wc_predictor/
@@ -166,7 +166,7 @@ python simulation/tournament.py --sims 50000 --output results/wc2026.json
 
 ---
 
-## 📊 Features del Modelo
+## Features del Modelo
 
 | Feature | Descripción | Fuente |
 |---------|-------------|--------|
@@ -183,7 +183,7 @@ python simulation/tournament.py --sims 50000 --output results/wc2026.json
 
 ---
 
-## 🏆 Grupos del Mundial 2026
+## Grupos del Mundial 2026
 
 ```
 Grupo A: México, Sudáfrica, Corea del Sur, Rep. Checa
@@ -202,7 +202,7 @@ Grupo L: Inglaterra, Croacia, Ghana, Panamá
 
 ---
 
-## 📈 Métricas del Modelo (Validation Set 2021-2024)
+## Métricas del Modelo (Validation Set 2021-2024)
 
 | Modelo | Log Loss | Brier Score | Accuracy |
 |--------|----------|-------------|----------|
@@ -215,7 +215,7 @@ Grupo L: Inglaterra, Croacia, Ghana, Panamá
 
 ---
 
-## 🔬 Referencias
+## Referencias
 
 - Dixon, M. & Coles, S. (1997). *Modelling Association Football Scores and Inefficiencies in the Football Betting Market*. Applied Statistics.
 - Maher, M.J. (1982). *Modelling association football scores*. Statistica Neerlandica.
@@ -224,6 +224,6 @@ Grupo L: Inglaterra, Croacia, Ghana, Panamá
 
 ---
 
-## 👤 Autor
+## Autor
 
 **Miguel Paez** — Sistema de predicción cuantitativa FIFA World Cup 2026
