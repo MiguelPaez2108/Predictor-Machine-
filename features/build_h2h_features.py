@@ -101,7 +101,7 @@ def build_h2h_features():
     out_path = DATA_FEATURES / "h2h_history.parquet"
     h2h_df.to_parquet(out_path, index=False)
 
-    print(f"\n✓ h2h_history.parquet: {len(h2h_df):,} filas")
+    print(f"\n[OK] h2h_history.parquet: {len(h2h_df):,} filas")
     print(f"  Pares únicos team×opp: {h2h_df.groupby(['team','opponent']).ngroups:,}")
     print(f"  H2H matches promedio (cuando hay historial): "
           f"{h2h_df[h2h_df['h2h_matches']>0]['h2h_matches'].mean():.1f}")

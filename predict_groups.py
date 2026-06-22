@@ -56,15 +56,15 @@ def get_winner_label(ph, pd, pa, home, away):
     if ph > pa and ph > pd:
         conf = ph
         winner = home
-        emoji = "🏠"
+        emoji = "C"
     elif pa > ph and pa > pd:
         conf = pa
         winner = away
-        emoji = "✈️ "
+        emoji = "F "
     else:
         conf = pd
         winner = "EMPATE"
-        emoji = "🤝"
+        emoji = "E"
     
     if conf > 0.55:
         strength = f"{C.GREEN}■■■■■{C.RESET}"
@@ -81,7 +81,7 @@ def get_winner_label(ph, pd, pa, home, away):
 def print_header():
     print()
     print(f"{C.BOLD}{C.CYAN}{'═' * 82}{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}  ⚽  PREDICCIONES — FASE DE GRUPOS — MUNDIAL 2026{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}    PREDICCIONES — FASE DE GRUPOS — MUNDIAL 2026{C.RESET}")
     print(f"{C.BOLD}{C.CYAN}      Basadas en 10,000 simulaciones Monte Carlo{C.RESET}")
     print(f"{C.BOLD}{C.CYAN}{'═' * 82}{C.RESET}")
 
@@ -124,7 +124,7 @@ def print_match(match_data, idx):
     print(f"    {prob_bar}")
     
     # Marcador + favorito
-    print(f"    {C.BOLD}📊 Marcador más probable: {C.MAGENTA}{score}{C.RESET} "
+    print(f"    {C.BOLD}[TABLA] Marcador más probable: {C.MAGENTA}{score}{C.RESET} "
           f"{C.DIM}({score_prob:.0%}){C.RESET}"
           f"   │   Goles esperados: {C.CYAN}{avg_h:.1f}{C.RESET} – {C.CYAN}{avg_a:.1f}{C.RESET}"
           f"   │   {emoji} {C.BOLD}{winner}{C.RESET} {strength}")

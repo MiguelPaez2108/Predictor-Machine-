@@ -412,11 +412,22 @@ def train_calibrator(method: str = "isotonic") -> MulticlassCalibrator:
     val = val.dropna(subset=["target_result"])
     val = val[val["target_result"].isin(["H", "D", "A"])]
 
-    if len(val) < 50:
-        print(f"  Pocos datos de validación ({len(val)}). Usando temperature scaling.")
+    # Isotonic regression necesita MUCHOS datos por bin de probabilidad para
+    # no memorizar ruido. Con 3 calibradores OvR (H/D/A) sobre validation sets
+    # de fútbol (que rara vez superan unos pocos miles de partidos), 50 es un
+    # umbral absurdamente bajo. Subimos a 1500 — por debajo de eso, Isotonic
+    # Regression tiende a sobreajustar y empeorar el Log Loss aunque el ECE
+    # mejore (ver resultados.txt: ECE bajó pero Log Loss subió).
+    MIN_SAMPLES_FOR_ISOTONIC = 1500
+
+    if method == "isotonic" and len(val) < MIN_SAMPLES_FOR_ISOTONIC:
+        print(f"  Validation set pequeño para Isotonic ({len(val):,} < "
+              f"{MIN_SAMPLES_FOR_ISOTONIC:,}). Usando temperature scaling "
+              f"(1 solo parámetro, mucho menos riesgo de sobreajuste).")
         method = "temperature"
 
-    print(f"  Calibrando sobre {len(val):,} partidos del validation set")
+    print(f"  Calibrando sobre {len(val):,} partidos del validation set "
+          f"(método: {method})")
 
     # Intentar cargar predicciones del meta-modelo o del RF como fallback
     meta_path = DATA_MODEL / "meta_xgboost.pkl"
@@ -466,9 +477,46 @@ def train_calibrator(method: str = "isotonic") -> MulticlassCalibrator:
     print(f"    ECE después    : {metrics['after']['ece_avg']}")
     print(f"    Δ ECE          : {metrics['delta_ece']:+.5f}")
 
-    # Guardar
+    # ── GUARDIA DE CALIDAD ────────────────────────────────────────────────
+    # Si el calibrador EMPEORA el Log Loss, no sirve para producción —
+    # significa que sobreajustó el validation set y va a distorsionar las
+    # probabilidades en datos nuevos (ej. WC2026). En ese caso, probamos
+    # con temperature scaling como fallback más conservador. Si tampoco
+    # mejora, NO guardamos ningún calibrador (dejamos pasar las
+    # probabilidades crudas del meta-modelo sin tocar).
+    if metrics["delta_ll"] < 0:
+        print(f"\n  [AVISO] El calibrador {method} EMPEORA el Log Loss "
+              f"({metrics['delta_ll']:+.4f}). Esto indica sobreajuste.")
+
+        if method != "temperature":
+            print(f"  → Reintentando con temperature scaling (más robusto)...")
+            calibrator_temp = MulticlassCalibrator(method="temperature")
+            calibrator_temp.fit(proba_raw, y_true)
+            proba_cal_temp = calibrator_temp.transform(proba_raw)
+            metrics_temp = calibrator_temp.evaluate(proba_raw, proba_cal_temp, y_true)
+            print(f"    Log Loss con temperature: {metrics_temp['after']['log_loss']} "
+                  f"(Δ={metrics_temp['delta_ll']:+.4f})")
+
+            if metrics_temp["delta_ll"] >= 0:
+                print(f"  [OK] Temperature scaling sí mejora. Usando este en su lugar.")
+                calibrator = calibrator_temp
+                metrics = metrics_temp
+            else:
+                print(f"  [ERROR] Ni siquiera temperature scaling mejora el Log Loss.")
+                print(f"    NO se guardará ningún calibrador — el pipeline usará")
+                print(f"    las probabilidades crudas del meta-modelo sin calibrar.")
+                return None
+        else:
+            print(f"  [ERROR] Temperature scaling tampoco mejora el Log Loss.")
+            print(f"    NO se guardará ningún calibrador.")
+            return None
+
+    # Guardar (solo si pasó la guardia de calidad)
     path = DATA_MODEL / "calibrator.pkl"
     calibrator.save(path)
+    print(f"\n  [OK] Calibrador final: {calibrator.method} "
+          f"(Log Loss final: {metrics['after']['log_loss']}, "
+          f"Δ={metrics['delta_ll']:+.4f})")
 
     return calibrator
 

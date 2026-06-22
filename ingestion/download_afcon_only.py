@@ -24,4 +24,4 @@ from config import DATA_SB
 if __name__ == "__main__":
     print("=== Descargando AFCON 2023 (competition_id=1267, season_id=107) ===")
     idx = dl_sb.download_competition(1267, 107, DATA_SB / "afcon_2023")
-    print(f"\n✓ Descarga completada: {len(idx)} partidos, {idx['n_events'].sum():,} eventos")
+    print(f"\n[OK] Descarga completada: {len(idx)} partidos, {idx['n_events'].sum():,} eventos")

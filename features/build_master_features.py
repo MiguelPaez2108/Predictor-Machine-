@@ -593,7 +593,7 @@ def build_master_features():
         print(f"\nDEBUG: wc_pred_input generado con {len(wc_pred_input):,} filas")
         wc_pred_input.to_parquet(wc_out, index=False)
 
-        print(f"\n✓ wc2026_prediction_input.parquet: {len(wc_pred_input):,} filas en {wc_out}")
+        print(f"\n[OK] wc2026_prediction_input.parquet: {len(wc_pred_input):,} filas en {wc_out}")
     except Exception:
         print("\nWARN: no se pudo generar wc2026_prediction_input.parquet (ver traceback):")
         traceback.print_exc()
@@ -609,9 +609,9 @@ def build_master_features():
         else:
             print(f"  {f:25s}: [no disponible]")
 
-    print(f"\n✓ training_set.parquet:   {len(train):,} filas")
-    print(f"✓ validation_set.parquet: {len(val):,} filas")
-    print(f"✓ test_set.parquet:       {len(test):,} filas")
+    print(f"\n[OK] training_set.parquet:   {len(train):,} filas")
+    print(f"[OK] validation_set.parquet: {len(val):,} filas")
+    print(f"[OK] test_set.parquet:       {len(test):,} filas")
 
 
 if __name__ == "__main__":

@@ -81,7 +81,7 @@ def load_kaggle_elo():
         print(f"  Columnas: {list(df.columns)}")
         return df
     else:
-        print(f"⚠  Archivo no encontrado: {kaggle_csv}")
+        print(f"[AVISO]  Archivo no encontrado: {kaggle_csv}")
         print("   Descárgalo desde:")
         print("   https://www.kaggle.com/datasets/afonsofernandescruz/2026-fifa-world-cup-historical-elo-ratings")
         print("   y colócalo en data/raw/elo_ratings_wc2026.csv")
@@ -97,7 +97,7 @@ def build_elo_from_results():
     from config import INTL_RESULTS, ELO_K, ELO_HOME_ADVANTAGE
 
     if not INTL_RESULTS.exists():
-        print("⚠  Ejecuta primero 01_download_martj42.py")
+        print("[AVISO]  Ejecuta primero 01_download_martj42.py")
         return None
 
     print("Calculando Elo dinámico desde resultados históricos...")

@@ -62,10 +62,10 @@ plt.rcParams.update({
 try:
     from mplsoccer import Pitch, VerticalPitch
     HAS_MPLSOCCER = True
-    print("  ✓ mplsoccer disponible")
+    print("  [OK] mplsoccer disponible")
 except ImportError:
     HAS_MPLSOCCER = False
-    print("  ✗ mplsoccer no disponible — instalar: pip install mplsoccer")
+    print("  [ERROR] mplsoccer no disponible — instalar: pip install mplsoccer")
 
 
 # ─── Carga de datos ───────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ def grafico_shotmap_final(df_all: pd.DataFrame, matches: pd.DataFrame):
         out = FIGURES / "test_shotmap_final_basico.png"
         plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
         plt.close()
-        print(f"  ✓ Guardado: {out}")
+        print(f"  [OK] Guardado: {out}")
         return
 
     # Con mplsoccer
@@ -205,7 +205,7 @@ def grafico_shotmap_final(df_all: pd.DataFrame, matches: pd.DataFrame):
     out = FIGURES / "test_shotmap_final.png"
     plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
     plt.close()
-    print(f"  ✓ Guardado: {out}")
+    print(f"  [OK] Guardado: {out}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ def grafico_heatmap_presion(df_all: pd.DataFrame, team: str = "Argentina"):
         out = FIGURES / f"test_heatmap_{team.replace(' ', '_')}_basico.png"
         plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
         plt.close()
-        print(f"  ✓ Guardado: {out}")
+        print(f"  [OK] Guardado: {out}")
         return
 
     fig, ax = plt.subplots(figsize=(12, 7))
@@ -268,7 +268,7 @@ def grafico_heatmap_presion(df_all: pd.DataFrame, team: str = "Argentina"):
     out = FIGURES / f"test_heatmap_{team.replace(' ', '_')}.png"
     plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
     plt.close()
-    print(f"  ✓ Guardado: {out}")
+    print(f"  [OK] Guardado: {out}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +346,7 @@ def grafico_xg_por_equipo(df_all: pd.DataFrame):
     out = FIGURES / "test_xg_por_equipo_wc2022.png"
     plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
     plt.close()
-    print(f"  ✓ Guardado: {out}")
+    print(f"  [OK] Guardado: {out}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -409,7 +409,7 @@ def grafico_xg_timeline(df_all: pd.DataFrame, matches: pd.DataFrame):
     out = FIGURES / "test_xg_timeline_wc2022.png"
     plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
     plt.close()
-    print(f"  ✓ Guardado: {out}")
+    print(f"  [OK] Guardado: {out}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -503,7 +503,7 @@ def grafico_ppda_equipos(df_all: pd.DataFrame, matches: pd.DataFrame):
     out = FIGURES / "test_ppda_equipos_wc2022.png"
     plt.savefig(out, dpi=130, bbox_inches="tight", facecolor=BG)
     plt.close()
-    print(f"  ✓ Guardado: {out}")
+    print(f"  [OK] Guardado: {out}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -529,7 +529,7 @@ if __name__ == "__main__":
     grafico_ppda_equipos(df_all, matches)
 
     print(f"\n{'═'*55}")
-    print(f"✓ 5 gráficos generados en: {FIGURES}")
+    print(f"[OK] 5 gráficos generados en: {FIGURES}")
     print("Abre la carpeta para ver los PNG:")
     print(f"  {FIGURES}")
     print(f"{'═'*55}")

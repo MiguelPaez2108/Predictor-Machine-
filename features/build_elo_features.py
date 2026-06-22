@@ -113,8 +113,8 @@ def build_elo_features():
     out_curr = DATA_FEATURES / "elo_current.parquet"
     elo_current.to_parquet(out_curr, index=False)
 
-    print(f"\n✓ team_snapshot.parquet: {len(snapshot):,} filas")
-    print(f"✓ elo_current.parquet:   {len(elo_current)} equipos")
+    print(f"\n[OK] team_snapshot.parquet: {len(snapshot):,} filas")
+    print(f"[OK] elo_current.parquet:   {len(elo_current)} equipos")
     print(f"  ELO range: {snapshot['elo_pre'].min():.0f} – {snapshot['elo_pre'].max():.0f}")
     print(f"  Equipos con FIFA rank: {elo_current['fifa_rank'].notna().sum()}/{len(elo_current)}")
     print(f"  Equipos con squad value: {elo_current['squad_value_eur'].notna().sum()}/{len(elo_current)}")

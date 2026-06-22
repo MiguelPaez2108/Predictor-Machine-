@@ -132,7 +132,7 @@ def build_form_features():
     out_path = DATA_FEATURES / "form_rolling.parquet"
     form_df.to_parquet(out_path, index=False)
 
-    print(f"\n✓ form_rolling.parquet: {len(form_df):,} filas")
+    print(f"\n[OK] form_rolling.parquet: {len(form_df):,} filas")
     print(f"  Equipos: {form_df['team'].nunique()}")
     print(f"  Forma weighted promedio: {form_df['form_weighted'].mean():.4f}")
     print(f"  Rango fechas: {form_df['date'].min().date()} → {form_df['date'].max().date()}")

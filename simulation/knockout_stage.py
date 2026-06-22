@@ -311,9 +311,9 @@ if __name__ == "__main__":
     print("Simulando fase eliminatoria...")
     ko = simulate_knockout_stage(group_results, models, rng)
 
-    print(f"\n🏆 CAMPEÓN:    {ko.champion}")
-    print(f"🥈 FINALISTA:  {ko.runner_up}")
-    print(f"🥉 TERCER:     {ko.third_place}")
+    print(f"\n[CAMPEON] CAMPEÓN:    {ko.champion}")
+    print(f"2. FINALISTA:  {ko.runner_up}")
+    print(f"3. TERCER:     {ko.third_place}")
     print(f"4️⃣  CUARTO:     {ko.fourth_place}")
 
     print("\n--- Final ---")

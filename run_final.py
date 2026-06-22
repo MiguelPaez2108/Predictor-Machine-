@@ -31,7 +31,7 @@ def step1_meta_model():
     print("═" * 60)
     meta_path = DATA_MODEL / "meta_xgboost.pkl"
     if meta_path.exists():
-        print(f"  ✓ meta_xgboost.pkl ya existe → saltando entrenamiento")
+        print(f"  [OK] meta_xgboost.pkl ya existe → saltando entrenamiento")
         return True
     try:
         from models.meta_model import train_meta_model
@@ -49,7 +49,7 @@ def step2_calibrator():
     print("═" * 60)
     cal_path = DATA_MODEL / "calibrator.pkl"
     if cal_path.exists():
-        print(f"  ✓ calibrator.pkl ya existe → re-entrenando para asegurar consistencia")
+        print(f"  [OK] calibrator.pkl ya existe → re-entrenando para asegurar consistencia")
     try:
         from models.calibration import train_calibrator
         cal = train_calibrator(method="isotonic")
@@ -117,5 +117,5 @@ if __name__ == "__main__":
     if ok_meta and ok_cal:
         step3_simulation(n_sims=n)
     else:
-        print("\n  ⚠ Se encontraron errores en pasos anteriores. Revisa los logs.")
+        print("\n  [AVISO] Se encontraron errores en pasos anteriores. Revisa los logs.")
         print("  Puedes correr la simulación directamente con --only-sim si los modelos base están OK.")

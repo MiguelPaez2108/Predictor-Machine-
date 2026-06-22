@@ -365,7 +365,7 @@ def simulate_wc2026(n_sims: int = 10_000,
 
     elapsed = time.time() - t0
     if verbose:
-        print(f"\n  ✓ {n_sims:,} simulaciones completadas en {elapsed:.1f}s\n")
+        print(f"\n  [OK] {n_sims:,} simulaciones completadas en {elapsed:.1f}s\n")
 
     return WC2026Results(
         n_sims          = n_sims,
@@ -385,7 +385,7 @@ def print_champion_table(results: WC2026Results, top_n: int = 20):
     df = results.champion_probs()
 
     print(f"\n{'═'*78}")
-    print(f"  🏆  ODDS DEL MUNDIAL 2026  —  {results.n_sims:,} SIMULACIONES")
+    print(f"  [CAMPEON]  ODDS DEL MUNDIAL 2026  —  {results.n_sims:,} SIMULACIONES")
     print(f"{'═'*78}")
     print(f"  {'#':3s} {'Equipo':22s} {'Grupo':5s} "
           f"{'Campeón':>9s} {'Final':>9s} {'Semis':>9s} "
@@ -486,12 +486,12 @@ def save_results(results: WC2026Results,
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
-    print(f"  ✓ Resultados guardados: {output_path}")
+    print(f"  [OK] Resultados guardados: {output_path}")
 
     # También en Parquet
     parquet_path = output_path.with_suffix(".parquet")
     champion_probs_df.to_parquet(parquet_path, index=True)
-    print(f"  ✓ Tabla de odds guardada: {parquet_path}")
+    print(f"  [OK] Tabla de odds guardada: {parquet_path}")
 
     return output_path
 

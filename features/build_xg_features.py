@@ -301,7 +301,7 @@ def build_xg_features():
                   f"PPDA_mean={df['ppda'].mean():.2f}")
             all_dfs.append(df)
         else:
-            print(f"  ⚠ Sin datos (ejecutar 02_download_statsbomb.py primero)")
+            print(f"  [AVISO] Sin datos (ejecutar 02_download_statsbomb.py primero)")
 
     if not all_dfs:
         print("ERROR: No hay datos de StatsBomb descargados.")
@@ -314,7 +314,7 @@ def build_xg_features():
     out_path = DATA_FEATURES / "xg_derived.parquet"
     result.to_parquet(out_path, index=False)
 
-    print(f"\n✓ xg_derived.parquet — {len(result):,} filas")
+    print(f"\n[OK] xg_derived.parquet — {len(result):,} filas")
     print(f"  Torneos: {result['tournament'].unique().tolist()}")
     print(f"  Rango: {result['date'].min().date()} → {result['date'].max().date()}")
     print(f"\n  Cobertura de features avanzadas:")

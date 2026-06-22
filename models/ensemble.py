@@ -344,7 +344,7 @@ def train_all(skip_oof: bool = False):
     train_calibrator(method="isotonic")
 
     print("\n" + "═" * 60)
-    print("✓ ENTRENAMIENTO COMPLETO")
+    print("[OK] ENTRENAMIENTO COMPLETO")
     print("═" * 60)
     print("\nUso:")
     print('  python models/ensemble.py --home "Argentina" --away "France"')
@@ -392,7 +392,7 @@ if __name__ == "__main__":
             preds    = predict_batch(fixtures, models=models, verbose=True)
             out_path = DATA_MODEL / "wc2026_predictions.parquet"
             preds.to_parquet(out_path, index=False)
-            print(f"\n✓ {len(preds):,} predicciones guardadas en {out_path}")
+            print(f"\n[OK] {len(preds):,} predicciones guardadas en {out_path}")
             if args.output:
                 preds.to_json(args.output, orient="records", indent=2)
 

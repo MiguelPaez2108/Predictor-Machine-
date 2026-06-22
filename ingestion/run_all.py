@@ -39,20 +39,20 @@ for label, script_name in scripts:
         )
         elapsed = time.time() - t0
         if result.returncode == 0:
-            print(f"✓  Completado en {elapsed:.1f}s")
+            print(f"[OK]  Completado en {elapsed:.1f}s")
         else:
-            print(f"✗  Terminó con código {result.returncode} en {elapsed:.1f}s")
+            print(f"[ERROR]  Terminó con código {result.returncode} en {elapsed:.1f}s")
             failed.append(label)
     except Exception as e:
-        print(f"✗  ERROR al lanzar {script_name}: {e}")
+        print(f"[ERROR]  ERROR al lanzar {script_name}: {e}")
         failed.append(label)
 
 print("\n" + "=" * 60)
 if failed:
-    print(f"⚠  {len(failed)} pasos fallaron:")
+    print(f"[AVISO]  {len(failed)} pasos fallaron:")
     for f in failed:
         print(f"   - {f}")
 else:
-    print("✓  Ingesta completa. Todos los datos descargados.")
+    print("[OK]  Ingesta completa. Todos los datos descargados.")
 print("=" * 60)
 print("\nSiguiente paso: python features/build_master_features.py")

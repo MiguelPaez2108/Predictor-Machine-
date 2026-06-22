@@ -45,12 +45,20 @@ STATSBOMB_COMPS = [
     (55,  282, DATA_SB / "euro_2024"),        # UEFA Euro 2024
     (55,   43, DATA_SB / "euro_2020"),        # UEFA Euro 2020
     (223, 282, DATA_SB / "copa_america_2024"),# Copa América 2024
-    (1267,107, DATA_SB / "afcon_2023"),       # Africa Cup of Nations 2023 ✓ Open Data
+    (1267,107, DATA_SB / "afcon_2023"),       # Africa Cup of Nations 2023 [OK] Open Data
 ]
 
 # ── Supabase ───────────────────────────────────────────────────────────────────
 SUPABASE_URL    = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY    = os.getenv("SUPABASE_KEY", "")
+
+# ── Football-Data.org API ──────────────────────────────────────────────────
+FOOTBALL_DATA_API_KEY  = os.getenv("FOOTBALL_DATA_API_KEY", "")
+FOOTBALL_DATA_BASE_URL = "https://api.football-data.org/v4"
+FOOTBALL_DATA_WC_CODE  = "WC"
+
+# ── Archivo de resultados reales ───────────────────────────────────────────
+RESULTS_FILE    = ROOT / "data" / "resultados_reales.json"
 
 # ── Parámetros del modelo ──────────────────────────────────────────────────────
 ELO_K = {"world_cup": 60, "qualifier": 40, "friendly": 20, "default": 30}

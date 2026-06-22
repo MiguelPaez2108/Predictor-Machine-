@@ -82,12 +82,12 @@ def download_fbref_category(category: str = "summary") -> pd.DataFrame:
             season        = WC2026_SEASON,
             stat_category = category
         )
-        print(f"    ✓ {len(df):,} filas descargadas")
+        print(f"    [OK] {len(df):,} filas descargadas")
         time.sleep(SCRAPER_DELAY)
         return df
 
     except Exception as e:
-        print(f"    ✗ Error en [{category}]: {e}")
+        print(f"    [ERROR] Error en [{category}]: {e}")
         return pd.DataFrame()
 
 
@@ -109,7 +109,7 @@ def download_fbref_matches() -> pd.DataFrame:
             competition = WC2026_COMPETITION,
             season      = WC2026_SEASON
         )
-        print(f"    ✓ {len(matches)} partidos encontrados")
+        print(f"    [OK] {len(matches)} partidos encontrados")
         time.sleep(SCRAPER_DELAY)
 
         # Descargar stats de cada partido
@@ -123,14 +123,14 @@ def download_fbref_matches() -> pd.DataFrame:
                 if (i + 1) % 5 == 0:
                     print(f"    Partido {i+1}/{min(20, len(matches))} procesado")
             except Exception as e:
-                print(f"    ⚠ Error en partido {i+1}: {e}")
+                print(f"    [AVISO] Error en partido {i+1}: {e}")
                 continue
 
         if all_match_data:
             return pd.concat(all_match_data, ignore_index=True)
 
     except Exception as e:
-        print(f"    ✗ Error general en partidos: {e}")
+        print(f"    [ERROR] Error general en partidos: {e}")
 
     return pd.DataFrame()
 
@@ -156,7 +156,7 @@ def aggregate_team_stats(summary_df: pd.DataFrame,
             break
 
     if team_col is None:
-        print("  ⚠ No se encontró columna de equipo en el DataFrame")
+        print("  [AVISO] No se encontró columna de equipo en el DataFrame")
         return pd.DataFrame()
 
     for team_name, grp in summary_df.groupby(team_col):
@@ -271,7 +271,7 @@ def build_wc2026_manual_snapshot() -> pd.DataFrame:
     df = pd.DataFrame(records)
     out = DATA_RAW / "wc2026_team_snapshot.parquet"
     df.to_parquet(out, index=False)
-    print(f"  ✓ Snapshot guardado: {out} ({len(df)} equipos)")
+    print(f"  [OK] Snapshot guardado: {out} ({len(df)} equipos)")
     return df
 
 
@@ -311,7 +311,7 @@ def main(categories: list = None, download_matches: bool = False,
         if not team_stats.empty:
             out = DATA_RAW / "wc2026_fbref_teams.parquet"
             team_stats.to_parquet(out, index=False)
-            print(f"\n  ✓ Stats por equipo: {out} ({len(team_stats)} equipos)")
+            print(f"\n  [OK] Stats por equipo: {out} ({len(team_stats)} equipos)")
 
     # Partidos si se solicita
     if download_matches:
@@ -319,13 +319,13 @@ def main(categories: list = None, download_matches: bool = False,
         if not matches.empty:
             out = DATA_RAW / "wc2026_fbref_matches.parquet"
             matches.to_parquet(out, index=False)
-            print(f"  ✓ Partidos: {out} ({len(matches)} filas)")
+            print(f"  [OK] Partidos: {out} ({len(matches)} filas)")
 
     # Snapshot manual como fallback siempre
     print("\n  Construyendo snapshot manual como fallback...")
     build_wc2026_manual_snapshot()
 
-    print("\n✓ Descarga WC2026 completada")
+    print("\n[OK] Descarga WC2026 completada")
 
 
 if __name__ == "__main__":

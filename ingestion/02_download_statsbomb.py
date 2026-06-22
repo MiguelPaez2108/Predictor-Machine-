@@ -58,11 +58,11 @@ def download_competition(comp_id, season_id, out_dir):
                 frames = sb.three_sixty(match_id=mid)
                 frames["match_id"] = mid
                 frames.to_parquet(out_dir / f"frames_{mid}.parquet", index=False)
-                print("✓ 360°")
+                print("[OK] 360°")
             except Exception as e:
-                print(f"⚠ 360 no disponible: {e}")
+                print(f"[AVISO] 360 no disponible: {e}")
         else:
-            print("✓")
+            print("[OK]")
 
     # Índice de la competición
     idx = pd.DataFrame(events_list)

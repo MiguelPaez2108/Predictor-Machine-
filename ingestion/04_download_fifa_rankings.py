@@ -118,7 +118,7 @@ def build_historical_from_kaggle():
         print(f"    Período: {df['rank_date'].min().date()} → {df['rank_date'].max().date()}")
         return df
     else:
-        print(f"  ⚠  No encontrado: {csv_path}")
+        print(f"  [AVISO]  No encontrado: {csv_path}")
         print("     Descarga desde: https://www.kaggle.com/datasets/cashncarry/fifaworldranking")
         return None
 

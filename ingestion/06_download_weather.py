@@ -166,9 +166,9 @@ def download():
 
         if weather_rows:
             avg_t = sum(r["temp_mean"] for r in weather_rows if r["temp_mean"]) / max(len(weather_rows), 1)
-            print(f"✓ {len(weather_rows)} días, temp_media={avg_t:.1f}°C")
+            print(f"[OK] {len(weather_rows)} días, temp_media={avg_t:.1f}°C")
         else:
-            print("⚠ sin datos")
+            print("[AVISO] sin datos")
 
         time.sleep(0.5)  # respetar rate limit de Open-Meteo
 
@@ -185,7 +185,7 @@ def download():
     print(f"Metadata sedes: {out_meta}")
 
     # Resumen de sedes con altitud alta (relevante para el modelo)
-    print("\n⚠  Sedes con altitud > 1500m (ajuste necesario en el modelo):")
+    print("\n[AVISO]  Sedes con altitud > 1500m (ajuste necesario en el modelo):")
     high_alt = [v for v in venues_meta if v["alt_flag"]]
     for v in high_alt:
         print(f"   {v['city']:15} {v['alt_m']}m — impacto estimado en xG: +{v['alt_m']/1000*8:.1f}%")

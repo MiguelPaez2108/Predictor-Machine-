@@ -185,7 +185,7 @@ def build_context_features():
     out_path = DATA_FEATURES / "context_features.parquet"
     ctx_df.to_parquet(out_path, index=False)
 
-    print(f"\n✓ context_features.parquet: {len(ctx_df):,} filas")
+    print(f"\n[OK] context_features.parquet: {len(ctx_df):,} filas")
     print(f"  Descanso promedio: {ctx_df['days_rest'].mean():.1f} días")
     print(f"  Fatiga index promedio: {ctx_df['fatigue_index'].mean():.3f}")
     print(f"  Fases: {ctx_df['phase'].value_counts().to_dict()}")

@@ -98,7 +98,7 @@ def add_result(home: str, away: str, home_goals: int, away_goals: int,
     g_home = TEAM_GROUP.get(home)
     g_away = TEAM_GROUP.get(away)
     if g_home != g_away:
-        print(color(f"  ⚠ Nota: {home} (Grupo {g_home}) vs {away} (Grupo {g_away}) — no son del mismo grupo", "yellow"))
+        print(color(f"  [AVISO] Nota: {home} (Grupo {g_home}) vs {away} (Grupo {g_away}) — no son del mismo grupo", "yellow"))
 
     # Verificar duplicados
     for r in results:
@@ -435,7 +435,7 @@ def color(text: str, code: str) -> str:
 def print_header():
     print()
     print(color("╔══════════════════════════════════════════════════════════════╗", "cyan"))
-    print(color("║", "cyan") + color("     ⚽  PREDICTOR MUNDIAL FIFA 2026  ⚽                     ", "bold") + color("║", "cyan"))
+    print(color("║", "cyan") + color("       PREDICTOR MUNDIAL FIFA 2026                       ", "bold") + color("║", "cyan"))
     print(color("║", "cyan") + color("     Sistema de predicción con ensemble 3 capas             ", "dim") + color("║", "cyan"))
     print(color("║", "cyan") + color("     Dixon-Coles + Elo + RF + Bayesian + XGBoost            ", "dim") + color("║", "cyan"))
     print(color("╚══════════════════════════════════════════════════════════════╝", "cyan"))
@@ -513,16 +513,16 @@ def print_group_matches(group: str, sim_data: Dict):
             ag = real["away_goals"]
 
             if hg > ag:
-                winner_str = color(f"✓ {home}", "green")
+                winner_str = color(f"[OK] {home}", "green")
             elif ag > hg:
-                winner_str = color(f"✓ {away}", "green")
+                winner_str = color(f"[OK] {away}", "green")
             else:
-                winner_str = color("✓ Empate", "yellow")
+                winner_str = color("[OK] Empate", "yellow")
 
             print(f"  {color(str(idx), 'bold'):>6s}. {home:20s} vs {away:20s}")
             print(f"         {color(f'RESULTADO FINAL: {hg}-{ag}', 'bold')}"
                   f"  │  {winner_str}"
-                  f"  {color('(jugado ✓)', 'green')}")
+                  f"  {color('(jugado [OK])', 'green')}")
         else:
             # PARTIDO PENDIENTE — mostrar predicción
             key = f"{t1}|{t2}"
@@ -602,13 +602,13 @@ def print_standings(group: str, dc_model=None, sim_data: Dict = None):
         # Color según posición
         if i < 2:
             tc = "green"   # Clasifican directo
-            pos_mark = "▲"
+            pos_mark = "^"
         elif i == 2:
             tc = "yellow"  # Posible mejor tercero
-            pos_mark = "●"
+            pos_mark = "o"
         else:
             tc = "red"     # Eliminado
-            pos_mark = "▼"
+            pos_mark = "v"
 
         gd_str = f"+{s['gd']}" if s["gd"] > 0 else str(s["gd"])
 
@@ -621,7 +621,7 @@ def print_standings(group: str, dc_model=None, sim_data: Dict = None):
         print(line)
 
     print()
-    print(color("  ▲ = Clasifica  ● = 3ro (posible)  ▼ = Eliminado", "dim"))
+    print(color("  ^ = Clasifica  o = 3ro (posible)  v = Eliminado", "dim"))
     print(color("  R = Resultado real  P = Predicción del modelo", "dim"))
     print()
 
@@ -648,7 +648,7 @@ def print_prediction(pred: Dict):
 
     print()
     print(color("╔" + "═" * w + "╗", "cyan"))
-    title = f"⚽  {home}  vs  {away}  ⚽"
+    title = f"  {home}  vs  {away}  "
     print(color("║", "cyan") + color(f"{title:^{w}s}", "bold") + color("║", "cyan"))
     print(color("╠" + "═" * w + "╣", "cyan"))
 
@@ -660,13 +660,13 @@ def print_prediction(pred: Dict):
         a_name = played["away_team"]
 
         if hg > ag:
-            result_str = f"✓ Ganó {h_name}"
+            result_str = f"[OK] Ganó {h_name}"
             rc = "green"
         elif ag > hg:
-            result_str = f"✓ Ganó {a_name}"
+            result_str = f"[OK] Ganó {a_name}"
             rc = "green"
         else:
-            result_str = "✓ Empate"
+            result_str = "[OK] Empate"
             rc = "yellow"
 
         score_line = f"RESULTADO REAL:  {h_name} {hg} - {ag} {a_name}"
@@ -732,11 +732,11 @@ def print_prediction(pred: Dict):
             if played:
                 real_score = f"{played['home_goals']}-{played['away_goals']}"
                 if home == played["home_team"] and score == real_score:
-                    hit = " ← ✓ ACERTÓ"
+                    hit = " ← [OK] ACERTÓ"
                 elif home != played["home_team"]:
                     rev_score = f"{played['away_goals']}-{played['home_goals']}"
                     if score == rev_score:
-                        hit = " ← ✓ ACERTÓ"
+                        hit = " ← [OK] ACERTÓ"
 
             score_bar = bar(prob / max(top_scores[0][1], 0.001), 18)
             line = f"  {rank:4s} {color(f'{score:5s}', sc):>20s}  {score_bar} {prob:6.2%}  {color(indicator, sc)}"
@@ -783,7 +783,7 @@ def print_prediction(pred: Dict):
 
     # ── Favorito ──────────────────────────────────────────────────────
     print(color("╠" + "═" * w + "╣", "cyan"))
-    winner_line = f"🏆 FAVORITO: {winner}  ({winner_prob:.1%})"
+    winner_line = f"[CAMPEON] FAVORITO: {winner}  ({winner_prob:.1%})"
     print(color("║", "cyan") + color(f"{winner_line:^{w}s}", winner_c) + color("║", "cyan"))
     print(color("╚" + "═" * w + "╝", "cyan"))
     print(color(f"  Fuente: {pred.get('source', 'N/A')}", "dim"))
@@ -908,16 +908,16 @@ def interactive_menu():
         models_loaded.append(f"Monte Carlo ({sim_data.get('meta',{}).get('n_sims', '?')} sims)")
 
     if models_loaded:
-        print(color(f"  ✓ Modelos cargados: {', '.join(models_loaded)}", "green"))
+        print(color(f"  [OK] Modelos cargados: {', '.join(models_loaded)}", "green"))
     else:
-        print(color("  ✗ No se encontraron modelos entrenados.", "red"))
+        print(color("  [ERROR] No se encontraron modelos entrenados.", "red"))
         print(color("    Ejecutar primero: python run_final.py", "yellow"))
         return
 
     # Mostrar resultados reales cargados
     results = load_results()
     if results:
-        print(color(f"  ✓ Resultados reales: {len(results)} partidos registrados", "green"))
+        print(color(f"  [OK] Resultados reales: {len(results)} partidos registrados", "green"))
 
     champ = sim_data.get("champion_probs", [])
 
@@ -934,9 +934,11 @@ def interactive_menu():
         print("  5. Ver favoritos al título")
         print("  6. Predecir TODOS los partidos de un grupo")
         print(color("  ─────────────────────────────────────────────────", "dim"))
-        print(color("  7. ✏️  Registrar resultado real", "yellow"))
-        print(color("  8. 📋 Ver resultados registrados", "yellow"))
-        print(color("  9. 📊 Ver tabla de posiciones de un grupo", "yellow"))
+        print(color("  7. Registrar resultado real", "yellow"))
+        print(color("  8. Ver resultados registrados", "yellow"))
+        print(color("  9. Ver tabla de posiciones de un grupo", "yellow"))
+        print(color("  ─────────────────────────────────────────────────", "dim"))
+        print(color(" 10. Sincronizar resultados desde API", "green"))
         print()
         print(color("  0. Salir", "dim"))
         print()
@@ -948,7 +950,7 @@ def interactive_menu():
             break
 
         if choice == "0":
-            print(color("\n  ¡Hasta luego! ⚽\n", "cyan"))
+            print(color("\n  ¡Hasta luego!\n", "cyan"))
             break
 
         elif choice == "1":
@@ -982,7 +984,7 @@ def interactive_menu():
             for idx, (t1, t2) in enumerate(matches, 1):
                 played = is_match_played(t1, t2)
                 if played:
-                    status = color(f" ✓ ({played['home_goals']}-{played['away_goals']})", "green")
+                    status = color(f" [OK] ({played['home_goals']}-{played['away_goals']})", "green")
                 else:
                     status = color(" (pendiente)", "dim")
                 print(f"  {idx}. {t1} vs {t2}{status}")
@@ -1035,7 +1037,7 @@ def interactive_menu():
 
             print()
             print(color("  ┌─────────────────────────────────────────────────────────┐", "cyan"))
-            print(color("  │            🏆  FAVORITOS AL TÍTULO  🏆                  │", "cyan"))
+            print(color("  │            [CAMPEON]  FAVORITOS AL TÍTULO  [CAMPEON]                  │", "cyan"))
             print(color("  └─────────────────────────────────────────────────────────┘", "cyan"))
             print()
             print(f"  {'#':>3s}  {'Equipo':20s} {'Grupo':6s} {'Campeón':>8s} {'Final':>8s} {'SF':>8s} {'QF':>8s} {'R16':>8s} {'Avanza':>8s}")
@@ -1052,7 +1054,7 @@ def interactive_menu():
                 p_ga = c.get("p_group_advance", 0)
 
                 tc = "green" if i < 3 else ("yellow" if i < 8 else "white")
-                medal = "🥇" if i == 0 else ("🥈" if i == 1 else ("🥉" if i == 2 else "  "))
+                medal = "1." if i == 0 else ("2." if i == 1 else ("3." if i == 2 else "  "))
                 line = f"  {medal}{i+1:>2d}  {color(team, tc):>30s} {grp:^6s} {p_ch:>7.1%} {p_fi:>7.1%} {p_sf:>7.1%} {p_qf:>7.1%} {p_r16:>7.1%} {p_ga:>7.1%}"
                 print(line)
 
@@ -1109,14 +1111,14 @@ def interactive_menu():
                 if confirm in ("s", "si", "sí", "y", "yes", ""):
                     res = add_result(home_team, away_team, hg, ag)
                     if "error" in res:
-                        print(color(f"  ✗ Error: {res['error']}", "red"))
+                        print(color(f"  [ERROR] Error: {res['error']}", "red"))
                     else:
                         status = res["status"]
                         m = res["match"]
                         if status == "updated":
-                            print(color(f"  ✓ Resultado ACTUALIZADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
+                            print(color(f"  [OK] Resultado ACTUALIZADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
                         else:
-                            print(color(f"  ✓ Resultado REGISTRADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
+                            print(color(f"  [OK] Resultado REGISTRADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
                         print(color(f"    Grupo: {m.get('group', '?')}  |  Fecha: {m.get('date', '?')}", "dim"))
                 else:
                     print(color("  Cancelado.", "dim"))
@@ -1141,10 +1143,10 @@ def interactive_menu():
 
                 res = add_result(home, away, hg, ag)
                 if "error" in res:
-                    print(color(f"  ✗ Error: {res['error']}", "red"))
+                    print(color(f"  [ERROR] Error: {res['error']}", "red"))
                 else:
                     m = res["match"]
-                    print(color(f"  ✓ Resultado registrado: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
+                    print(color(f"  [OK] Resultado registrado: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
 
         elif choice == "8":
             print_all_results()
@@ -1155,6 +1157,23 @@ def interactive_menu():
                 print_standings(g, dc_model, sim_data)
             else:
                 print(color(f"  Grupo '{g}' no válido.", "red"))
+
+        elif choice == "10":
+            # ── SINCRONIZAR DESDE API ─────────────────────────────
+            try:
+                from ingestion.sync_results import sync, print_quick_standings
+                new, updated, _ = sync()
+                if new or updated:
+                    # Recargar resultados después del sync
+                    results = load_results()
+                    print(color(f"  [OK] {len(results)} resultados totales en memoria", "green"))
+                    ver = input(color("  → ¿Ver tabla de un grupo? (A-L / Enter para saltar): ", "bold")).strip().upper()
+                    if ver and ver in GROUPS:
+                        print_standings(ver, dc_model, sim_data)
+            except ImportError as e:
+                print(color(f"  [ERROR] Error importando sync_results: {e}", "red"))
+            except Exception as e:
+                print(color(f"  [ERROR] Error en sincronización: {e}", "red"))
 
         else:
             print(color("  Opción no válida.", "red"))
@@ -1200,7 +1219,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="⚽ Predictor de partidos del Mundial FIFA 2026"
+        description=" Predictor de partidos del Mundial FIFA 2026"
     )
     parser.add_argument("--home", type=str, default=None, help="Equipo local")
     parser.add_argument("--away", type=str, default=None, help="Equipo visitante")
@@ -1222,10 +1241,10 @@ if __name__ == "__main__":
             if home_t and away_t:
                 res = add_result(home_t, away_t, hg, ag)
                 if "error" in res:
-                    print(color(f"  ✗ {res['error']}", "red"))
+                    print(color(f"  [ERROR] {res['error']}", "red"))
                 else:
                     m = res["match"]
-                    print(color(f"  ✓ {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
+                    print(color(f"  [OK] {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
         else:
             print(color("  Formato no válido. Usa: --resultado 'Argentina 3 Algeria 0'", "red"))
 
