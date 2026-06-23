@@ -95,7 +95,7 @@ wc_predictor/
 
 ---
 
-## 🚀 Instalación y Uso
+## Instalación y Uso
 
 ### 1. Instalar dependencias
 
