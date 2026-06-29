@@ -860,5 +860,27 @@
     "matchday": 3,
     "synced_at": "2026-06-29T16:09:32.000000",
     "source": "manual"
+  },
+  {
+    "home_team": "Brazil",
+    "away_team": "Japan",
+    "home_goals": 2,
+    "away_goals": 1,
+    "stage": "R32",
+    "group": "R32",
+    "date": "2026-06-29",
+    "synced_at": "2026-06-29T15:41:26.585939",
+    "source": "manual_r32"
+  },
+  {
+    "home_team": "South Africa",
+    "away_team": "Canada",
+    "home_goals": 0,
+    "away_goals": 1,
+    "stage": "R32",
+    "group": "R32",
+    "date": "2026-06-29",
+    "synced_at": "2026-06-29T15:41:26.632376",
+    "source": "manual_r32"
   }
 ]

@@ -37,6 +37,7 @@ from simulation.knockout_stage import (
     WC2026_R32_REAL_BRACKET_LEFT,
     WC2026_R32_REAL_BRACKET_RIGHT,
 )
+from print_real_bracket import print_real_bracket
 
 # ── Constantes ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent
@@ -959,7 +960,7 @@ def interactive_menu():
             break
 
         elif choice == "1":
-            print_real_bracket()
+            print_real_bracket(RESULTS_FILE)
 
         elif choice == "2":
             print()
