@@ -72,8 +72,7 @@ class KnockoutResult:
 # Los 8 mejores terceros se distribuyen en la llave según los grupos
 # de donde provengan. FIFA establece la distribución exacta de 3ros.
 
-# Llave oficial de R32:
-# (Bracket A) Matches 1-8:
+# Llave slot-based de R32 (para modo simulación hipotética):
 WC2026_R32_BRACKET = [
     # Bracket superior
     ("1A", "2D"),   # Partido R32-1
@@ -88,20 +87,45 @@ WC2026_R32_BRACKET = [
     ("1J", "2K"),   # Partido R32-10
     ("1K", "2C"),   # Partido R32-11
     ("1L", "2B"),   # Partido R32-12
-    # 8 mejores terceros (por rendimiento, se asignan a slots libres)
-    # FIFA aún no ha publicado la llave exacta de terceros para 2026;
-    # usamos distribución basada en precedente de WC2022 (donde 3eros
-    # se insertan en los slots predefinidos de la llave). Por ahora:
-    ("3ABCD", "1G_WINNER_SIDE"),   # placeholder — se resolverá dinámicamente
-    ("3EFGH", "1J_WINNER_SIDE"),
-    ("3IJKL", "1K_WINNER_SIDE"),
-    ("3ABCL", "1L_WINNER_SIDE"),   # placeholder
+    # 8 mejores terceros — distribuidos en parejas (slots dinámicos)
+    ("3_best_1", "3_best_2"),
+    ("3_best_3", "3_best_4"),
+    ("3_best_5", "3_best_6"),
+    ("3_best_7", "3_best_8"),
 ]
 
-# Nota: la distribución exacta de los 8 mejores terceros en 2026
-# sigue siendo provisional (FIFA la publicará tras la fase de grupos).
-# El simulador la gestiona asignando los 8 mejores 3ros a los 4
-# cruces del bracket inferior.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Llave REAL R32 — cruces fijos tras la fase de grupos completada
+# ─────────────────────────────────────────────────────────────────────────────
+# Fuente: FIFA, publicada tras finalizar los 72 partidos de grupos.
+# Estos cruces son DETERMINISTAS — no dependen de la simulación de grupos.
+
+WC2026_R32_REAL_BRACKET_LEFT = [
+    # Lado izquierdo (matches 1–8)
+    ("Germany",       "Paraguay"),              # R32-L1
+    ("France",        "Sweden"),                # R32-L2
+    ("South Africa",  "Canada"),                # R32-L3
+    ("Netherlands",   "Morocco"),               # R32-L4
+    ("Portugal",      "Croatia"),               # R32-L5
+    ("Spain",         "Austria"),               # R32-L6
+    ("United States", "Bosnia and Herzegovina"),# R32-L7
+    ("Belgium",       "Senegal"),               # R32-L8
+]
+
+WC2026_R32_REAL_BRACKET_RIGHT = [
+    # Lado derecho (matches 9–16)
+    ("Brazil",        "Japan"),                 # R32-R1
+    ("Ivory Coast",   "Norway"),                # R32-R2
+    ("Mexico",        "Ecuador"),               # R32-R3
+    ("England",       "DR Congo"),              # R32-R4
+    ("Argentina",     "Cape Verde"),            # R32-R5
+    ("Australia",     "Egypt"),                 # R32-R6
+    ("Switzerland",   "Algeria"),               # R32-R7
+    ("Colombia",      "Ghana"),                 # R32-R8
+]
+
+WC2026_R32_REAL_BRACKET = WC2026_R32_REAL_BRACKET_LEFT + WC2026_R32_REAL_BRACKET_RIGHT
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Resolver slots de equipos
@@ -170,6 +194,14 @@ def build_r32_matchups(slots: Dict[str, str],
     return direct_matchups + thirds_matchups
 
 
+def build_real_r32_matchups() -> List[Tuple[str, str]]:
+    """
+    Devuelve los 16 cruces REALES de R32 tras la fase de grupos completada.
+    No depende de ninguna simulación — los cruces son fijos.
+    """
+    return list(WC2026_R32_REAL_BRACKET)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Simular una ronda eliminatoria
 # ─────────────────────────────────────────────────────────────────────────────
@@ -215,9 +247,14 @@ def simulate_round(matchups: List[Tuple[str, str]],
 
 def simulate_knockout_stage(all_group_results: Dict[str, GroupResult],
                              models: Optional[Dict] = None,
-                             rng: Optional[np.random.Generator] = None) -> KnockoutResult:
+                             rng: Optional[np.random.Generator] = None,
+                             use_real_bracket: bool = False) -> KnockoutResult:
     """
     Simula la fase eliminatoria completa desde R32 hasta la Final.
+
+    Si use_real_bracket=True, usa los cruces REALES de R32 (post-grupos)
+    en vez de resolver slots dinámicamente. En este modo, all_group_results
+    puede ser None o vacío.
     """
     if models is None:
         models = get_models()
@@ -226,12 +263,14 @@ def simulate_knockout_stage(all_group_results: Dict[str, GroupResult],
 
     ko = KnockoutResult()
 
-    # ── Resolver clasificados ─────────────────────────────────────────────────
-    slots       = resolve_qualifiers(all_group_results)
-    best_thirds = select_best_third_place(all_group_results)
-
     # ── Ronda de 32 ──────────────────────────────────────────────────────────
-    r32_matchups = build_r32_matchups(slots, best_thirds)
+    if use_real_bracket:
+        r32_matchups = build_real_r32_matchups()
+    else:
+        slots       = resolve_qualifiers(all_group_results)
+        best_thirds = select_best_third_place(all_group_results)
+        r32_matchups = build_r32_matchups(slots, best_thirds)
+
     r32_matches, r32_winners = simulate_round(r32_matchups, "R32", models, rng)
     ko.r32_matches = r32_matches
 

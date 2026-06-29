@@ -195,6 +195,9 @@ class MulticlassCalibrator:
         """Calibra y re-normaliza las probabilidades."""
         assert self.is_fitted
 
+        if self.method == "none":
+            return proba
+
         if self.method == "temperature":
             return self.temp_scaler_.transform(proba)
 
@@ -503,13 +506,26 @@ def train_calibrator(method: str = "isotonic") -> MulticlassCalibrator:
                 metrics = metrics_temp
             else:
                 print(f"  [ERROR] Ni siquiera temperature scaling mejora el Log Loss.")
-                print(f"    NO se guardará ningún calibrador — el pipeline usará")
-                print(f"    las probabilidades crudas del meta-modelo sin calibrar.")
-                return None
+                print(f"    Guardando calibrador passthrough (método 'none') para usar probabilities crudas.")
+                calibrator = MulticlassCalibrator(method="none")
+                calibrator.is_fitted = True
+                metrics = {
+                    "before": metrics["before"],
+                    "after": metrics["before"],
+                    "delta_ll": 0.0,
+                    "delta_ece": 0.0
+                }
         else:
             print(f"  [ERROR] Temperature scaling tampoco mejora el Log Loss.")
-            print(f"    NO se guardará ningún calibrador.")
-            return None
+            print(f"    Guardando calibrador passthrough (método 'none') para usar probabilities crudas.")
+            calibrator = MulticlassCalibrator(method="none")
+            calibrator.is_fitted = True
+            metrics = {
+                "before": metrics["before"],
+                "after": metrics["before"],
+                "delta_ll": 0.0,
+                "delta_ece": 0.0
+            }
 
     # Guardar (solo si pasó la guardia de calidad)
     path = DATA_MODEL / "calibrator.pkl"

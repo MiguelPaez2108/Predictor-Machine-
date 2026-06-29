@@ -32,6 +32,11 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import DATA_MODEL
+from simulation.knockout_stage import (
+    WC2026_R32_REAL_BRACKET,
+    WC2026_R32_REAL_BRACKET_LEFT,
+    WC2026_R32_REAL_BRACKET_RIGHT,
+)
 
 # ── Constantes ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent

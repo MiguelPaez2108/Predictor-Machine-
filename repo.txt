@@ -1,13 +1,1 @@
-La simulación corrió de punta a punta, pero hay un bug claro que hay que arreglar antes de confiar en estos números.
-El bug: "Clasifica" supera el 100%, en algunos casos casi 200%
-Mira Argentina: 196.3% de probabilidad de clasificar. Eso es matemáticamente imposible — una probabilidad no puede superar el 100%. Lo mismo pasa con Brasil (196.5%), Japón (176.7%), etc.
-La causa está en tournament.py, en el bloque donde se actualiza n_group_advance:
-pythonif round_str in ("R32", "R16", "QF", "SF", "F", "Champion"):
-    tr.n_group_advance = max(tr.n_group_advance,
-                             tr.n_group_advance + (1 if round_str != "R32" or True else 0))
-Esa línea es lógicamente un no-op disfrazado — round_str != "R32" or True siempre es True, así que siempre suma 1. El problema real es que el contador n_group_advance ya se incrementó antes en el bloque de group_data (cuando pos <= 2), y luego se vuelve a incrementar aquí cuando el equipo aparece en ko_data (que incluye TODOS los que llegaron a R32, incluyendo los que avanzaron por posición Y los mejores terceros). Así que un equipo que queda 1º o 2º de grupo se cuenta dos veces.
-La corrección:
-pythonif round_str in ("R32", "R16", "QF", "SF", "F", "Champion"):
-    tr.n_group_advance += 1
-Pero esto sigue duplicando porque el primer bloque (pos <= 2) también incrementa. La forma correcta es eliminar el incremento duplicado y dejar que n_group_advance se cuente una sola vez por simulación, idealmente usando un set de equipos que avanzaron en esa simulación específica, no acumulando ciegamente.
-¿Quieres que te genere el parche completo para tournament.py corrigiendo esta doble contabilización? Es un cambio acotado a esa función y no requiere re-entrenar nada, solo volver a correr la simulación.
+https://github.com/MiguelPaez2108/Predictor-Machine-

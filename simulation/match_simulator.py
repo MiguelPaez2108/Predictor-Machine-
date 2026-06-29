@@ -301,6 +301,33 @@ def _load_static_data() -> Dict:
     else:
         data["xg_avg"], data["xga_avg"] = {}, {}
 
+    # ── xG EN VIVO del WC2026 (Sofascore) — prioridad sobre el histórico ─────
+    live_path = DATA_FEATURES / "wc2026_live_snapshot.parquet"
+    if live_path.exists():
+        df = pd.read_parquet(live_path)
+        if "xg_avg" in df.columns:
+            data["wc2026_xg_avg"] = dict(zip(df["team"], df["xg_avg"]))
+        else:
+            data["wc2026_xg_avg"] = {}
+        if "xga_avg" in df.columns:
+            data["wc2026_xga_avg"] = dict(zip(df["team"], df["xga_avg"]))
+        else:
+            data["wc2026_xga_avg"] = {}
+        if "gf_avg" in df.columns:
+            data["wc2026_gf_avg"] = dict(zip(df["team"], df["gf_avg"]))
+        else:
+            data["wc2026_gf_avg"] = {}
+        if "ga_avg" in df.columns:
+            data["wc2026_ga_avg"] = dict(zip(df["team"], df["ga_avg"]))
+        else:
+            data["wc2026_ga_avg"] = {}
+        print(f"  [OK] xG en vivo WC2026 cargado: {len(data['wc2026_xg_avg'])} equipos")
+    else:
+        data["wc2026_xg_avg"]  = {}
+        data["wc2026_xga_avg"] = {}
+        data["wc2026_gf_avg"]  = {}
+        data["wc2026_ga_avg"]  = {}
+
     _STATIC_DATA = data
     return data
 
@@ -336,8 +363,11 @@ def build_static_row(home: str, away: str, is_knockout: bool = False) -> Dict:
     ga_h   = d["form_ga_avg"].get(home, np.nan)
     ga_a   = d["form_ga_avg"].get(away, np.nan)
 
-    xg_h, xg_a   = d["xg_avg"].get(home, np.nan),  d["xg_avg"].get(away, np.nan)
-    xga_h, xga_a = d["xga_avg"].get(home, np.nan), d["xga_avg"].get(away, np.nan)
+    # xG: priorizar dato EN VIVO del WC2026, caer al histórico si falta
+    xg_h  = d["wc2026_xg_avg"].get(home,  d["xg_avg"].get(home, np.nan))
+    xg_a  = d["wc2026_xg_avg"].get(away,  d["xg_avg"].get(away, np.nan))
+    xga_h = d["wc2026_xga_avg"].get(home, d["xga_avg"].get(home, np.nan))
+    xga_a = d["wc2026_xga_avg"].get(away, d["xga_avg"].get(away, np.nan))
 
     row = {
         "home_team": home, "away_team": away,

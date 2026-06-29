@@ -194,6 +194,9 @@ def diag_pipeline_layers(teams):
         p_cal_str = "—"
         if meta is not None and meta.is_fitted:
             try:
+                from simulation.match_simulator import build_static_row
+                row_static = build_static_row(t, opponent)
+
                 meta_input = {
                     "home_team": t, "away_team": opponent,
                     "p_home_dc": p_dc, "p_draw_dc": dc.predict_match(t, opponent)["p_draw"],
@@ -203,6 +206,12 @@ def diag_pipeline_layers(teams):
                     "p_home_bay": p_bay if not np.isnan(p_bay) else 0.333,
                     "p_draw_bay": 0.333, "p_away_bay": 0.334,
                 }
+                for feat in ["delta_elo", "delta_form", "delta_xg",
+                             "delta_fifa_rank", "delta_sv_log", "delta_rest",
+                             "expected_home_elo"]:
+                    val = row_static.get(feat, np.nan)
+                    meta_input[feat] = float(val) if not pd.isna(val) else 0.0
+
                 df_meta = pd.DataFrame([meta_input])
                 pred_meta = meta.predict_proba_df(df_meta).iloc[0]
                 p_meta = pred_meta["p_home_win"]

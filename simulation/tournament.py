@@ -189,7 +189,8 @@ class WC2026Results:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _run_one_simulation(models: Dict,
-                         rng: np.random.Generator) -> Tuple[Dict, Dict, Dict]:
+                         rng: np.random.Generator,
+                         use_real_bracket: bool = False) -> Tuple[Dict, Dict, Dict]:
     """
     Corre una simulación completa del torneo.
     Devuelve (group_data, knockout_data, champion).
@@ -198,7 +199,8 @@ def _run_one_simulation(models: Dict,
     group_results = simulate_all_groups(models, rng)
 
     # Fase eliminatoria
-    ko = simulate_knockout_stage(group_results, models, rng)
+    ko = simulate_knockout_stage(group_results, models, rng,
+                                 use_real_bracket=use_real_bracket)
 
     # Construir datos de grupo: {team: {pts, gf, ga, position}}
     group_data: Dict[str, Dict] = {}
@@ -250,13 +252,15 @@ def _run_one_simulation(models: Dict,
 
 def simulate_wc2026(n_sims: int = 10_000,
                     seed: int = 42,
-                    verbose: bool = True) -> WC2026Results:
+                    verbose: bool = True,
+                    use_real_bracket: bool = False) -> WC2026Results:
     """
     Corre N simulaciones completas del Mundial 2026 y agrega estadísticas.
 
     n_sims: número de simulaciones (rec: ≥ 10 000 para resultados estables)
     seed:   semilla para reproducibilidad
     verbose: si True, muestra progreso cada 1 000 simulaciones
+    use_real_bracket: si True, usa la llave real de R32 (post-grupos)
     """
     ensure_dirs()
     t0 = time.time()
@@ -280,9 +284,10 @@ def simulate_wc2026(n_sims: int = 10_000,
     champion_counts: Dict[str, int] = defaultdict(int)
 
     if verbose:
+        bracket_mode = "LLAVE REAL (post-grupos)" if use_real_bracket else "SIMULACIÓN COMPLETA"
         print(f"\n{'═'*60}")
         print(f"  SIMULACIÓN MONTE CARLO — MUNDIAL 2026")
-        print(f"  N = {n_sims:,} simulaciones")
+        print(f"  N = {n_sims:,} simulaciones  |  Modo: {bracket_mode}")
         print(f"{'═'*60}\n")
 
     for sim in range(n_sims):
@@ -295,7 +300,9 @@ def simulate_wc2026(n_sims: int = 10_000,
                   f"({max(champion_counts.values(), default=0)/(sim+1)*100:.1f}%)")
 
         try:
-            group_data, ko_data, match_data = _run_one_simulation(models, rng)
+            group_data, ko_data, match_data = _run_one_simulation(
+                models, rng, use_real_bracket=use_real_bracket
+            )
         except Exception as e:
             # Si hay error en una simulación, la saltamos
             continue
@@ -516,12 +523,15 @@ if __name__ == "__main__":
                         help="Top N equipos en la tabla de favoritos (default: 20)")
     parser.add_argument("--quick",  action="store_true",
                         help="Modo rápido: 1 000 simulaciones")
+    parser.add_argument("--real-bracket", action="store_true", dest="real_bracket",
+                        help="Usar la llave real de R32 (post-fase-de-grupos)")
     args = parser.parse_args()
 
     n = 1_000 if args.quick else args.sims
     out_path = Path(args.output) if args.output else None
 
-    results = simulate_wc2026(n_sims=n, seed=args.seed, verbose=True)
+    results = simulate_wc2026(n_sims=n, seed=args.seed, verbose=True,
+                              use_real_bracket=args.real_bracket)
 
     if results is not None:
         print_champion_table(results, top_n=args.top)
