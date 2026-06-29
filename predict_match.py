@@ -930,20 +930,20 @@ def interactive_menu():
         print()
         print(color("  ┌─────────────────────────────────────────────────────┐", "cyan"))
         print(color("  │                  MENÚ PRINCIPAL                     │", "cyan"))
+        print(color("  │          FASE ELIMINATORIA — WC 2026               │", "cyan"))
         print(color("  └─────────────────────────────────────────────────────┘", "cyan"))
         print()
-        print("  1. Ver todos los grupos")
-        print("  2. Ver partidos de un grupo (resultados + predicciones)")
-        print("  3. Predecir un partido del Mundial")
+        print("  1. Ver llave eliminatoria completa (R32)")
+        print("  2. Predecir un cruce real de R32")
+        print("  3. Predecir TODOS los cruces reales de R32")
         print("  4. Predecir un partido personalizado")
-        print("  5. Ver favoritos al título")
-        print("  6. Predecir TODOS los partidos de un grupo")
+        print("  5. Ver favoritos al título (Monte Carlo)")
         print(color("  ─────────────────────────────────────────────────", "dim"))
-        print(color("  7. Registrar resultado real", "yellow"))
-        print(color("  8. Ver resultados registrados", "yellow"))
-        print(color("  9. Ver tabla de posiciones de un grupo", "yellow"))
-        print(color("  ─────────────────────────────────────────────────", "dim"))
-        print(color(" 10. Sincronizar resultados desde API", "green"))
+        print("  6. Ver todos los grupos (Fase completada)")
+        print("  7. Ver tabla de posiciones de un grupo")
+        print("  8. Ver todos los resultados de grupos registrados")
+        print("  9. Registrar resultado real manual (grupos)")
+        print(" 10. Sincronizar resultados desde API (Sofascore)")
         print()
         print(color("  0. Salir", "dim"))
         print()
@@ -959,53 +959,36 @@ def interactive_menu():
             break
 
         elif choice == "1":
-            print_groups()
+            print_real_bracket()
 
         elif choice == "2":
-            g = input(color("  → Grupo (A-L): ", "bold")).strip().upper()
-            if g in GROUPS:
-                print_group_matches(g, sim_data)
-            else:
-                print(color(f"  Grupo '{g}' no válido. Usa A-L.", "red"))
-
-        elif choice == "3":
             print()
-            for g, teams in GROUPS.items():
-                print(f"  Grupo {color(g, 'bold')}: {', '.join(teams)}")
+            print(color("  CRUCES REALES DE RONDA DE 32:", "bold"))
             print()
-
-            g = input(color("  → Grupo (A-L): ", "bold")).strip().upper()
-            if g not in GROUPS:
-                print(color(f"  Grupo '{g}' no válido.", "red"))
-                continue
-
-            teams = GROUPS[g]
-            matches = []
-            for i in range(len(teams)):
-                for j in range(i + 1, len(teams)):
-                    matches.append((teams[i], teams[j]))
-
-            print()
-            for idx, (t1, t2) in enumerate(matches, 1):
-                played = is_match_played(t1, t2)
-                if played:
-                    status = color(f" [OK] ({played['home_goals']}-{played['away_goals']})", "green")
-                else:
-                    status = color(" (pendiente)", "dim")
-                print(f"  {idx}. {t1} vs {t2}{status}")
+            for idx, (t1, t2) in enumerate(WC2026_R32_REAL_BRACKET, 1):
+                side = "IZQ" if idx <= 8 else "DER"
+                print(f"  {color(str(idx), 'bold'):>6s}. [{side}] {t1:25s} vs {t2}")
             print()
 
             try:
-                sel = int(input(color("  → Número de partido: ", "bold")).strip())
-                if 1 <= sel <= len(matches):
-                    home, away = matches[sel - 1]
+                sel = int(input(color("  → Número de cruce (1-16): ", "bold")).strip())
+                if 1 <= sel <= 16:
+                    home, away = WC2026_R32_REAL_BRACKET[sel - 1]
+                    print(color(f"\n  Prediciendo cruce: {home} vs {away}...\n", "dim"))
                     pred = predict_full(home, away, dc_model, sim_data)
                     print_prediction(pred)
                     print_score_heatmap(pred)
                 else:
-                    print(color("  Número no válido.", "red"))
+                    print(color("  Número no válido. Usa 1-16.", "red"))
             except ValueError:
                 print(color("  Entrada no válida.", "red"))
+
+        elif choice == "3":
+            print()
+            print(color("  ═══ PREDICCIONES COMPLETAS — RONDA DE 32 ═══", "bold"))
+            for home, away in WC2026_R32_REAL_BRACKET:
+                pred = predict_full(home, away, dc_model, sim_data)
+                print_prediction(pred)
 
         elif choice == "4":
             print()
@@ -1070,25 +1053,19 @@ def interactive_menu():
             print()
 
         elif choice == "6":
-            g = input(color("  → Grupo (A-L): ", "bold")).strip().upper()
-            if g not in GROUPS:
-                print(color(f"  Grupo '{g}' no válido.", "red"))
-                continue
-
-            teams = GROUPS[g]
-            matches = []
-            for i in range(len(teams)):
-                for j in range(i + 1, len(teams)):
-                    matches.append((teams[i], teams[j]))
-
-            print()
-            print(color(f"  ═══ PREDICCIONES COMPLETAS — GRUPO {g} ═══", "bold"))
-            for home, away in matches:
-                pred = predict_full(home, away, dc_model, sim_data)
-                print_prediction(pred)
+            print_groups()
 
         elif choice == "7":
-            # ── REGISTRAR RESULTADO REAL ──────────────────────────────
+            g = input(color("  → Grupo (A-L): ", "bold")).strip().upper()
+            if g in GROUPS:
+                print_standings(g, dc_model, sim_data)
+            else:
+                print(color(f"  Grupo '{g}' no válido. Usa A-L.", "red"))
+
+        elif choice == "8":
+            print_all_results()
+
+        elif choice == "9":
             print()
             print(color("  ═══ REGISTRAR RESULTADO REAL ═══", "bold"))
             print()
@@ -1098,7 +1075,6 @@ def interactive_menu():
 
             raw = input(color("  → Resultado (ej: Argentina 3 Algeria 0): ", "bold")).strip()
 
-            # Intentar parsear formato "Team1 X Team2 Y"
             parsed = _parse_result_input(raw)
             if parsed:
                 home, hg, away, ag = parsed
@@ -1109,7 +1085,6 @@ def interactive_menu():
                 if not away_team:
                     continue
 
-                # Confirmar
                 print()
                 print(f"  {home_team} {hg} - {ag} {away_team}")
                 confirm = input(color("  ¿Correcto? (s/n): ", "bold")).strip().lower()
@@ -1124,11 +1099,9 @@ def interactive_menu():
                             print(color(f"  [OK] Resultado ACTUALIZADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
                         else:
                             print(color(f"  [OK] Resultado REGISTRADO: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
-                        print(color(f"    Grupo: {m.get('group', '?')}  |  Fecha: {m.get('date', '?')}", "dim"))
                 else:
                     print(color("  Cancelado.", "dim"))
             else:
-                # Formato paso a paso
                 h_input = input(color("  → Equipo local: ", "bold")).strip()
                 home = find_team(h_input)
                 if not home:
@@ -1153,28 +1126,13 @@ def interactive_menu():
                     m = res["match"]
                     print(color(f"  [OK] Resultado registrado: {m['home_team']} {m['home_goals']}-{m['away_goals']} {m['away_team']}", "green"))
 
-        elif choice == "8":
-            print_all_results()
-
-        elif choice == "9":
-            g = input(color("  → Grupo (A-L): ", "bold")).strip().upper()
-            if g in GROUPS:
-                print_standings(g, dc_model, sim_data)
-            else:
-                print(color(f"  Grupo '{g}' no válido.", "red"))
-
         elif choice == "10":
-            # ── SINCRONIZAR DESDE API ─────────────────────────────
             try:
-                from ingestion.sync_results import sync, print_quick_standings
+                from ingestion.sync_results import sync
                 new, updated, _ = sync()
                 if new or updated:
-                    # Recargar resultados después del sync
                     results = load_results()
                     print(color(f"  [OK] {len(results)} resultados totales en memoria", "green"))
-                    ver = input(color("  → ¿Ver tabla de un grupo? (A-L / Enter para saltar): ", "bold")).strip().upper()
-                    if ver and ver in GROUPS:
-                        print_standings(ver, dc_model, sim_data)
             except ImportError as e:
                 print(color(f"  [ERROR] Error importando sync_results: {e}", "red"))
             except Exception as e:
